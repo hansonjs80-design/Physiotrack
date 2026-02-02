@@ -10,10 +10,12 @@ export const usePresetManager = () => {
 
   // Sync from DB on mount and subscribe to changes
   useEffect(() => {
-    if (!isOnlineMode() || !supabase) return;
+    // Local capture to satisfy TypeScript null checks
+    const client = supabase;
+    if (!isOnlineMode() || !client) return;
 
     const fetchPresets = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('presets')
         .select('*')
         .order('rank', { ascending: true });
@@ -40,7 +42,7 @@ export const usePresetManager = () => {
     fetchPresets();
     
     // Subscribe to changes (for multi-device sync)
-    const channel = supabase
+    const channel = client
       .channel('public:presets')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'presets' }, () => {
         // When DB changes, re-fetch to ensure order and full data integrity
@@ -48,7 +50,7 @@ export const usePresetManager = () => {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { client.removeChannel(channel); };
   }, []); // Run once on mount
 
   // The main update function exposed to the app
@@ -57,11 +59,14 @@ export const usePresetManager = () => {
     setLocalPresets(newPresets);
 
     // 2. DB Sync
-    if (isOnlineMode() && supabase) {
+    // Local capture not needed here strictly if we check supabase directly in condition,
+    // but useful for consistent typing.
+    const client = supabase;
+    if (isOnlineMode() && client) {
       try {
         // Sync Strategy: 
         // A. Get current DB IDs to identify deletions.
-        const { data: existingRows, error: fetchError } = await supabase.from('presets').select('id');
+        const { data: existingRows, error: fetchError } = await client.from('presets').select('id');
         
         if (fetchError) {
             console.error('Error fetching presets for sync:', fetchError);
@@ -76,7 +81,7 @@ export const usePresetManager = () => {
           // B. Delete removed items
           if (idsToDelete.length > 0) {
             console.log('Attempting to delete presets:', idsToDelete);
-            const { error: deleteError } = await supabase.from('presets').delete().in('id', idsToDelete);
+            const { error: deleteError } = await client.from('presets').delete().in('id', idsToDelete);
             if (deleteError) {
                 console.error('Error deleting presets:', deleteError);
                 // We might want to alert the user here, but mostly we just log it.
@@ -97,7 +102,7 @@ export const usePresetManager = () => {
             updated_at: new Date().toISOString()
           }));
 
-          const { error: upsertError } = await supabase.from('presets').upsert(rowsToUpsert);
+          const { error: upsertError } = await client.from('presets').upsert(rowsToUpsert);
           if (upsertError) {
               console.error("Error upserting presets:", upsertError);
           }

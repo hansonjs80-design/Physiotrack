@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { BedState, BedStatus, Preset, TreatmentStep } from '../types';
 import { useLocalStorage } from './useLocalStorage';
@@ -183,7 +182,7 @@ export const useBedManager = (presets: Preset[]) => {
       currentStepIndex: 0,
       queue: [],
       startTime: null,
-      originalDuration: null,
+      originalDuration: undefined, // Fix: Changed null to undefined
       remainingTime: 0,
       isPaused: false,
       isInjection: false,
@@ -202,7 +201,7 @@ export const useBedManager = (presets: Preset[]) => {
   return { 
     beds, 
     selectPreset, 
-    startCustomPreset,
+    startCustomPreset, 
     startQuickTreatment,
     startTraction: (bedId: number, duration: number, options: any) => {
         const tractionPreset: Preset = {

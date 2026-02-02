@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BedState, BedStatus } from '../types';
 import { supabase, isOnlineMode } from '../lib/supabase';
@@ -12,7 +11,9 @@ export const useBedRealtime = (
   const [realtimeStatus, setRealtimeStatus] = useState<'OFFLINE' | 'CONNECTING' | 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'CLOSED' | 'TIMED_OUT'>('OFFLINE');
 
   useEffect(() => {
-    if (!isOnlineMode() || !supabase) {
+    // Local capture to satisfy TypeScript null checks in closures
+    const client = supabase;
+    if (!isOnlineMode() || !client) {
       setRealtimeStatus('OFFLINE');
       return;
     }
@@ -20,7 +21,7 @@ export const useBedRealtime = (
     setRealtimeStatus('CONNECTING');
 
     const fetchBeds = async () => {
-      const { data, error } = await supabase.from('beds').select('*').order('id');
+      const { data, error } = await client.from('beds').select('*').order('id');
       if (!error && data) {
         const serverBeds: BedState[] = data.map(row => mapRowToBed(row) as BedState);
         setBeds((currentBeds) => {
@@ -35,7 +36,7 @@ export const useBedRealtime = (
 
     fetchBeds();
 
-    const channel = supabase
+    const channel = client
       .channel('public:beds')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'beds' }, (payload) => {
         const updatedBedFields = mapRowToBed(payload.new);
@@ -89,7 +90,7 @@ export const useBedRealtime = (
         setRealtimeStatus(status as any);
       });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { client.removeChannel(channel); };
   }, [setBeds, setLocalBeds]);
 
   return { realtimeStatus };

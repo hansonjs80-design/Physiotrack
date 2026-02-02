@@ -1,4 +1,3 @@
-
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import { BedState, BedStatus, Preset, TreatmentStep } from '../types';
 import { BedHeader } from './BedHeader';
@@ -40,7 +39,8 @@ export const BedCard: React.FC<BedCardProps> = memo(({
   const currentStep = currentPreset?.steps[bed.currentStepIndex];
   const steps = currentPreset?.steps || [];
   const queue = bed.queue || [];
-  const isOvertime = bed.status === BedStatus.ACTIVE && currentStep?.enableTimer && bed.remainingTime <= 0;
+  // Fix: Ensure strict boolean result for isOvertime to avoid TypeScript errors
+  const isOvertime = bed.status === BedStatus.ACTIVE && !!currentStep?.enableTimer && bed.remainingTime <= 0;
   
   const [trashState, setTrashState] = useState<'idle' | 'confirm' | 'deleting'>('idle');
 

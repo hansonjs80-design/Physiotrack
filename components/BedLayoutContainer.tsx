@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PortraitLayout } from './PortraitLayout';
 import { LandscapeLayout } from './LandscapeLayout';
@@ -11,4 +10,4 @@ export const BedLayoutContainer: React.FC<BedLayoutProps> = (props) => {
       <LandscapeLayout {...props} />
     </div>
   );
-});
+};

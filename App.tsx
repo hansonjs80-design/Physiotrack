@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { usePresetManager } from './hooks/usePresetManager';
-import { SettingsPanel } from './components/SettingsPanel';
 import { useBedManager } from './hooks/useBedManager';
 import { useHeaderScroll } from './hooks/useHeaderScroll';
-import { PresetSelectorModal } from './components/PresetSelectorModal';
-import { BedEditOverlay } from './components/BedEditOverlay';
 import { AppHeader } from './components/AppHeader';
 import { BedLayoutContainer } from './components/BedLayoutContainer';
 import { STANDARD_TREATMENTS } from './constants';
 import { TreatmentStep } from './types';
+
+// Lazy load heavy components to improve initial load performance
+const SettingsPanel = React.lazy(() => import('./components/SettingsPanel').then(module => ({ default: module.SettingsPanel })));
+const PresetSelectorModal = React.lazy(() => import('./components/PresetSelectorModal').then(module => ({ default: module.PresetSelectorModal })));
+const BedEditOverlay = React.lazy(() => import('./components/BedEditOverlay').then(module => ({ default: module.BedEditOverlay })));
 
 const App: React.FC = () => {
   const { presets, updatePresets } = usePresetManager();
@@ -115,38 +117,40 @@ const App: React.FC = () => {
         />
       </main>
 
-      <PresetSelectorModal 
-        isOpen={selectingBedId !== null}
-        onClose={() => setSelectingBedId(null)}
-        presets={presets}
-        onSelect={handleSelectPreset}
-        onCustomStart={handleCustomStart}
-        onQuickStart={handleQuickStart}
-        onStartTraction={handleStartTraction}
-        targetBedId={selectingBedId}
-      />
-
-      {editingBed && (
-        <BedEditOverlay 
-          bed={editingBed}
-          steps={editingBedSteps}
-          onClose={() => setEditingBedId(null)}
-          onToggleInjection={toggleInjection}
-          onToggleTraction={toggleTraction}
-          onToggleESWT={toggleESWT}
-          onToggleManual={toggleManual}
-          onUpdateSteps={updateBedSteps}
-          onUpdateDuration={updateBedDuration}
+      <Suspense fallback={null}>
+        <PresetSelectorModal 
+          isOpen={selectingBedId !== null}
+          onClose={() => setSelectingBedId(null)}
+          presets={presets}
+          onSelect={handleSelectPreset}
+          onCustomStart={handleCustomStart}
+          onQuickStart={handleQuickStart}
+          onStartTraction={handleStartTraction}
+          targetBedId={selectingBedId}
         />
-      )}
 
-      <SettingsPanel 
-        isOpen={isMenuOpen} 
-        onClose={() => setMenuOpen(false)}
-        presets={presets}
-        onUpdatePresets={updatePresets}
-        onResetAllBeds={resetAll}
-      />
+        {editingBed && (
+          <BedEditOverlay 
+            bed={editingBed}
+            steps={editingBedSteps}
+            onClose={() => setEditingBedId(null)}
+            onToggleInjection={toggleInjection}
+            onToggleTraction={toggleTraction}
+            onToggleESWT={toggleESWT}
+            onToggleManual={toggleManual}
+            onUpdateSteps={updateBedSteps}
+            onUpdateDuration={updateBedDuration}
+          />
+        )}
+
+        <SettingsPanel 
+          isOpen={isMenuOpen} 
+          onClose={() => setMenuOpen(false)}
+          presets={presets}
+          onUpdatePresets={updatePresets}
+          onResetAllBeds={resetAll}
+        />
+      </Suspense>
       
       {isMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />

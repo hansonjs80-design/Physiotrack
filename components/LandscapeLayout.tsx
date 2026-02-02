@@ -11,14 +11,12 @@ export const LandscapeLayout: React.FC<BedLayoutProps> = memo((props) => {
     // Outer Wrapper: Handles scrolling
     // Mobile Landscape: Horizontal & Vertical scroll allowed
     // Tablet/Desktop: Scroll allowed if content overflows, but generally grid fits.
-    <div className="hidden landscape:block w-full h-full overflow-x-auto overflow-y-auto no-scrollbar pb-2 sm:pb-0 px-2 sm:px-4">
+    <div className="block w-full h-full overflow-x-auto overflow-y-auto no-scrollbar pb-2 sm:pb-0 px-2 sm:px-4">
       {/* 
         Grid Container:
         - Mobile Landscape (< lg): 4 Columns. 
           min-w-[170vw] ensures the grid is wider than the screen, forcing horizontal scroll.
         - Tablet/Desktop Landscape (>= lg OR md with enough space): 4 Columns.
-          Removed 'lg' constraint for min-w-0 to allow tablets (md) to also try and fit 4 columns without forcing scroll
-          if the screen is wide enough, adhering to the request "Desktop/Tablet... make it 1 row...".
       */}
       <div className="
         grid gap-3 sm:gap-4 content-start

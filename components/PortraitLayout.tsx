@@ -11,7 +11,6 @@ export const PortraitLayout: React.FC<BedLayoutProps> = memo((props) => {
   }, [beds]);
 
   // 2개 행씩 묶음 처리 (1-11/2-null 묶음, 3-10/4-9 묶음, 5-8/6-7 묶음)
-  // 이를 통해 1번과 2번 사이의 간격을 좁히고, 묶음 간의 간격을 조절합니다.
   const groupedPairs = useMemo(() => {
     const groups = [];
     for (let i = 0; i < PORTRAIT_PAIRS_CONFIG.length; i += 2) {
@@ -21,7 +20,7 @@ export const PortraitLayout: React.FC<BedLayoutProps> = memo((props) => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 pb-32 landscape:hidden max-w-4xl mx-auto px-0.5 sm:px-1.5">
+    <div className="flex flex-col gap-4 pb-32 max-w-4xl mx-auto px-0.5 sm:px-1.5">
       {groupedPairs.map((group, groupIdx) => (
         <div key={`group-${groupIdx}`} className="flex flex-col gap-1.5 sm:gap-2">
           {group.map((pair, idx) => (

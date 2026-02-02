@@ -11,19 +11,18 @@ export const LandscapeLayout: React.FC<BedLayoutProps> = memo((props) => {
     // Outer Wrapper: Handles scrolling
     // Mobile Landscape: Horizontal & Vertical scroll allowed
     // Tablet/Desktop: Scroll allowed if content overflows, but generally grid fits.
-    <div className="block w-full h-full overflow-x-auto overflow-y-auto no-scrollbar pb-2 sm:pb-0 px-2 sm:px-4">
+    <div className="block w-full h-full overflow-x-auto overflow-y-auto no-scrollbar pb-2 sm:pb-0 px-1 sm:px-2">
       {/* 
         Grid Container:
         - Mobile Landscape (< lg): 4 Columns. 
-          min-w-[170vw] ensures the grid is wider than the screen, forcing horizontal scroll.
-        - Tablet/Desktop Landscape (>= lg OR md with enough space): 4 Columns.
+          Force min-width (e.g., 140vw/120vw) to ensure grid is wider than screen, enabling horizontal scroll.
+        - Tablet/Desktop Landscape (>= lg): 4 Columns. Fit to screen width (w-full).
       */}
       <div className="
-        grid gap-3 sm:gap-4 content-start
-        landscape:grid-cols-4 
-        landscape:min-w-[170vw] sm:landscape:min-w-[130vw]
-        md:landscape:min-w-0 md:landscape:w-full
-        lg:landscape:min-w-0 lg:landscape:w-full
+        grid gap-2 sm:gap-4 content-start
+        grid-cols-4 
+        min-w-[140vw] sm:min-w-[120vw]
+        lg:min-w-0 lg:w-full
       ">
         {LANDSCAPE_GRID_IDS.map((id, idx) => {
           // Empty Slot Handling

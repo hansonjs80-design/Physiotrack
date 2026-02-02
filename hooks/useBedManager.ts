@@ -74,7 +74,7 @@ export const useBedManager = (presets: Preset[]) => {
       currentPresetId: presetId,
       customPreset: null as any,
       currentStepIndex: 0,
-      queue: preset.steps.map((_, idx) => idx).slice(1),
+      queue: [],
       startTime: Date.now(),
       remainingTime: firstStep.duration,
       originalDuration: firstStep.duration,
@@ -102,7 +102,7 @@ export const useBedManager = (presets: Preset[]) => {
       currentPresetId: customPreset.id,
       customPreset: customPreset,
       currentStepIndex: 0,
-      queue: steps.map((_, idx) => idx).slice(1),
+      queue: [],
       startTime: Date.now(),
       remainingTime: firstStep.duration,
       originalDuration: firstStep.duration,
@@ -130,16 +130,17 @@ export const useBedManager = (presets: Preset[]) => {
   const nextStep = useCallback((bedId: number) => {
     const bed = bedsRef.current.find(b => b.id === bedId);
     if (!bed || bed.status === BedStatus.IDLE) return;
+    
     const preset = bed.customPreset || presets.find(p => p.id === bed.currentPresetId);
     if (!preset) return;
     
-    const currentQueue = bed.queue || [];
-    if (currentQueue.length > 0) {
-      const nextIndex = currentQueue[0];
+    const nextIndex = bed.currentStepIndex + 1;
+    
+    if (nextIndex < preset.steps.length) {
       const nextStepItem = preset.steps[nextIndex];
       updateBedState(bedId, {
         currentStepIndex: nextIndex,
-        queue: currentQueue.slice(1),
+        queue: [],
         startTime: Date.now(),
         remainingTime: nextStepItem.duration,
         originalDuration: nextStepItem.duration,
@@ -148,6 +149,67 @@ export const useBedManager = (presets: Preset[]) => {
     } else {
       updateBedState(bedId, { status: BedStatus.COMPLETED, remainingTime: 0, isPaused: false });
     }
+  }, [presets, updateBedState]);
+
+  const prevStep = useCallback((bedId: number) => {
+    const bed = bedsRef.current.find(b => b.id === bedId);
+    if (!bed || bed.status !== BedStatus.ACTIVE) return;
+    
+    const preset = bed.customPreset || presets.find(p => p.id === bed.currentPresetId);
+    if (!preset) return;
+
+    const prevIndex = bed.currentStepIndex - 1;
+    
+    if (prevIndex >= 0) {
+      const prevStepItem = preset.steps[prevIndex];
+      updateBedState(bedId, {
+        currentStepIndex: prevIndex,
+        startTime: Date.now(),
+        remainingTime: prevStepItem.duration,
+        originalDuration: prevStepItem.duration,
+        isPaused: false
+      });
+    }
+  }, [presets, updateBedState]);
+
+  const swapSteps = useCallback((bedId: number, idx1: number, idx2: number) => {
+    const bed = bedsRef.current.find(b => b.id === bedId);
+    if (!bed) return;
+
+    let steps = [...(bed.customPreset?.steps || presets.find(p => p.id === bed.currentPresetId)?.steps || [])];
+    if (steps.length === 0) return;
+
+    // Perform swap
+    [steps[idx1], steps[idx2]] = [steps[idx2], steps[idx1]];
+
+    // If we are modifying a standard preset, we must convert it to a custom preset first
+    // to avoid affecting other beds sharing the same preset ID.
+    const newCustomPreset: Preset = {
+       id: bed.customPreset?.id || `custom-swap-${Date.now()}`,
+       name: bed.customPreset?.name || (presets.find(p => p.id === bed.currentPresetId)?.name || 'Custom'),
+       steps: steps
+    };
+
+    const updates: Partial<BedState> = {
+       customPreset: newCustomPreset,
+       // Also swap memos if they exist
+       memos: {
+         ...bed.memos,
+         [idx1]: bed.memos[idx2],
+         [idx2]: bed.memos[idx1]
+       }
+    };
+    
+    // If the currently active step was swapped, reset the timer for the NEW step at the current index
+    if (bed.status === BedStatus.ACTIVE && (bed.currentStepIndex === idx1 || bed.currentStepIndex === idx2)) {
+       const currentStepItem = steps[bed.currentStepIndex];
+       updates.remainingTime = currentStepItem.duration;
+       updates.originalDuration = currentStepItem.duration;
+       updates.startTime = Date.now();
+       updates.isPaused = false;
+    }
+
+    updateBedState(bedId, updates);
   }, [presets, updateBedState]);
 
   const togglePause = useCallback((bedId: number) => {
@@ -218,14 +280,12 @@ export const useBedManager = (presets: Preset[]) => {
             memos: {}
         });
     },
-    nextStep, 
+    nextStep,
+    prevStep,
+    swapSteps, 
     togglePause,
     jumpToStep: (bedId: number, stepIndex: number) => {
-      const bed = bedsRef.current.find(b => b.id === bedId);
-      if (!bed) return;
-      if (bed.currentStepIndex === stepIndex) return;
-      const newQueue = [...(bed.queue || []).filter(idx => idx !== stepIndex), stepIndex];
-      updateBedState(bedId, { queue: newQueue });
+       // Deprecated but kept for type signature compatibility if needed
     },
     toggleInjection: (id: number) => toggleFlag(id, 'isInjection'),
     toggleTraction: (id: number) => toggleFlag(id, 'isTraction'),
@@ -242,7 +302,7 @@ export const useBedManager = (presets: Preset[]) => {
     updateBedSteps: (bedId: number, steps: TreatmentStep[]) => {
       const bed = bedsRef.current.find(b => b.id === bedId);
       if (!bed) return;
-      updateBedState(bedId, { customPreset: { id: 'custom', name: '치료', steps }, queue: steps.map((_, i) => i).slice(bed.currentStepIndex + 1) });
+      updateBedState(bedId, { customPreset: { id: 'custom', name: '치료', steps } });
     },
     clearBed, 
     resetAll: () => bedsRef.current.forEach(bed => clearBed(bed.id)),

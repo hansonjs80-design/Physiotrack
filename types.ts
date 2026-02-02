@@ -53,8 +53,10 @@ export interface BedLayoutProps {
   onOpenSelector: (bedId: number) => void;
   onEdit: (bedId: number) => void;
   onNext: (bedId: number) => void;
+  onPrev: (bedId: number) => void;
   onTogglePause: (bedId: number) => void;
-  onJumpToStep: (bedId: number, stepIndex: number) => void;
+  onSwapSteps: (bedId: number, idx1: number, idx2: number) => void;
+  onJumpToStep?: (bedId: number, stepIndex: number) => void; // Keeping optional for backward compat if needed
   onClear: (bedId: number) => void;
   onToggleInjection: (bedId: number) => void;
   onToggleTraction: (bedId: number) => void;

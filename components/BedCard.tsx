@@ -13,7 +13,9 @@ interface BedCardProps {
   onOpenSelector: (bedId: number) => void;
   onEdit: (bedId: number) => void;
   onNextStep: (bedId: number) => void;
+  onPrevStep?: (bedId: number) => void;
   onTogglePause: (bedId: number) => void;
+  onSwapSteps?: (bedId: number, idx1: number, idx2: number) => void;
   onJumpToStep?: (bedId: number, stepIndex: number) => void;
   onClear: (bedId: number) => void;
   onUpdateMemo?: (bedId: number, stepIndex: number, memo: string | null) => void;
@@ -27,9 +29,10 @@ export const BedCard: React.FC<BedCardProps> = memo(({
   presets, 
   onOpenSelector, 
   onEdit, 
-  onNextStep, 
+  onNextStep,
+  onPrevStep,
   onTogglePause,
-  onJumpToStep, 
+  onSwapSteps,
   onClear,
   onUpdateMemo,
   onUpdateDuration,
@@ -38,15 +41,16 @@ export const BedCard: React.FC<BedCardProps> = memo(({
   const currentPreset = bed.customPreset || presets.find(p => p.id === bed.currentPresetId);
   const currentStep = currentPreset?.steps[bed.currentStepIndex];
   const steps = currentPreset?.steps || [];
-  const queue = bed.queue || [];
   // Fix: Ensure strict boolean result for isOvertime to avoid TypeScript errors
   const isOvertime = bed.status === BedStatus.ACTIVE && !!currentStep?.enableTimer && bed.remainingTime <= 0;
   
   const [trashState, setTrashState] = useState<'idle' | 'confirm' | 'deleting'>('idle');
+  const [swapSourceIndex, setSwapSourceIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (bed.status === BedStatus.IDLE) {
       setTrashState('idle');
+      setSwapSourceIndex(null);
     }
   }, [bed.status]);
 
@@ -60,6 +64,21 @@ export const BedCard: React.FC<BedCardProps> = memo(({
       requestAnimationFrame(() => {
         onClear(bed.id);
       });
+    }
+  };
+
+  const handleSwapRequest = (bedId: number, idx: number) => {
+    if (!onSwapSteps) return;
+
+    if (swapSourceIndex === null) {
+      // First click: Select source
+      setSwapSourceIndex(idx);
+    } else {
+      // Second click: Execute swap or cancel if same
+      if (swapSourceIndex !== idx) {
+        onSwapSteps(bedId, swapSourceIndex, idx);
+      }
+      setSwapSourceIndex(null);
     }
   };
 
@@ -79,6 +98,7 @@ export const BedCard: React.FC<BedCardProps> = memo(({
         onUpdateDuration={onUpdateDuration}
       />
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col w-full min-h-0 relative bg-white/40 dark:bg-slate-800/20 backdrop-blur-xs">
         <div className="flex-1 flex flex-row w-full min-h-0">
           {bed.status === BedStatus.IDLE ? (
@@ -91,14 +111,16 @@ export const BedCard: React.FC<BedCardProps> = memo(({
               <BedContent 
                 steps={steps}
                 bed={bed}
-                queue={queue}
-                onJumpToStep={onJumpToStep}
+                queue={[]} // Queue visual removed
+                onSwapRequest={handleSwapRequest}
+                swapSourceIndex={swapSourceIndex}
                 onUpdateMemo={onUpdateMemo}
               />
             </div>
           )}
         </div>
 
+        {/* Status badges overlay at bottom-right */}
         <BedStatusBadges bed={bed} />
       </div>
 
@@ -106,8 +128,8 @@ export const BedCard: React.FC<BedCardProps> = memo(({
         <BedFooter 
           bed={bed} 
           steps={steps} 
-          queue={queue} 
           onNext={onNextStep} 
+          onPrev={onPrevStep}
           onClear={onClear} 
         />
       )}
@@ -123,6 +145,9 @@ export const BedCard: React.FC<BedCardProps> = memo(({
     prevProps.bed.isManual === nextProps.bed.isManual &&
     prevProps.bed.isESWT === nextProps.bed.isESWT &&
     prevProps.bed.isTraction === nextProps.bed.isTraction &&
+    prevProps.bed.customPreset === nextProps.bed.customPreset && 
     prevProps.isCompact === nextProps.isCompact
+    // Note: swapSourceIndex is local state, so not checked here, but strict equality of bed might need attention if customPreset changes deeply.
+    // Ideally we should include customPreset comparison or rely on bed reference change.
   );
 });

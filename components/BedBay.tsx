@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { BedState, Preset, TreatmentStep } from '../types';
 import { BedCard } from './BedCard';
@@ -9,8 +8,10 @@ interface BedBayProps {
   onOpenSelector: (bedId: number) => void; 
   onEdit: (bedId: number) => void;
   onNext: (bedId: number) => void; 
+  onPrev?: (bedId: number) => void;
   onTogglePause: (bedId: number) => void;
   onJumpToStep?: (bedId: number, stepIndex: number) => void;
+  onSwapSteps?: (bedId: number, idx1: number, idx2: number) => void;
   onClear: (bedId: number) => void; 
   side: 'left' | 'right';
   isEmpty?: boolean;
@@ -25,8 +26,10 @@ export const BedBay: React.FC<BedBayProps> = memo(({
   onOpenSelector, 
   onEdit,
   onNext,
+  onPrev,
   onTogglePause,
   onJumpToStep,
+  onSwapSteps,
   onClear, 
   isEmpty, 
   onUpdateMemo,
@@ -49,8 +52,10 @@ export const BedBay: React.FC<BedBayProps> = memo(({
             onOpenSelector={onOpenSelector}
             onEdit={onEdit}
             onNextStep={onNext}
+            onPrevStep={onPrev}
             onTogglePause={onTogglePause}
             onJumpToStep={onJumpToStep}
+            onSwapSteps={onSwapSteps}
             onClear={onClear}
             isCompact={true}
             onUpdateMemo={onUpdateMemo}

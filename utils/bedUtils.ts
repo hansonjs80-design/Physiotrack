@@ -68,7 +68,9 @@ export const getStepColor = (
 export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => {
   // 기본 테두리를 검정색(border-black)으로 설정하고 두께를 border-[1.5px]로 조정 (기존 border-2에서 감소)
   let base = "relative flex flex-col h-full rounded-lg shadow-md border-[1.5px] border-black dark:border-slate-200 overflow-hidden select-none transition-all duration-300 ";
-  const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[110px] sm:landscape:min-h-[110px] lg:landscape:min-h-[240px] ";
+  
+  // landscape:min-h-[132px] -> 118px (reduced by ~10%)
+  const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[118px] sm:landscape:min-h-[118px] lg:landscape:min-h-[216px] ";
 
   // Bed T (ID: 11) 만의 고유 테마 설정
   const isBedT = bed.id === 11;

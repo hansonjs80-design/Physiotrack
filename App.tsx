@@ -19,7 +19,9 @@ const App: React.FC = () => {
     startCustomPreset,
     startQuickTreatment,
     startTraction, 
-    nextStep, 
+    nextStep,
+    prevStep,
+    swapSteps, 
     togglePause,
     jumpToStep, 
     toggleInjection,
@@ -90,7 +92,7 @@ const App: React.FC = () => {
 
       <main 
         ref={mainRef}
-        className="flex-1 overflow-x-auto overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 md:p-4 scroll-smooth touch-pan-x touch-pan-y bg-gray-200 dark:bg-slate-950"
+        className="flex-1 overflow-x-auto overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 md:p-4 scroll-smooth touch-pan-x touch-pan-y overscroll-contain bg-gray-200 dark:bg-slate-950"
       >
         <BedLayoutContainer 
           beds={beds}
@@ -98,8 +100,10 @@ const App: React.FC = () => {
           onOpenSelector={setSelectingBedId}
           onEdit={setEditingBedId}
           onNext={nextStep}
+          onPrev={prevStep}
           onTogglePause={togglePause}
           onJumpToStep={jumpToStep}
+          onSwapSteps={swapSteps}
           onClear={clearBed}
           onToggleInjection={toggleInjection}
           onToggleTraction={toggleTraction}

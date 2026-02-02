@@ -17,9 +17,9 @@ export const BedTrashButton: React.FC<BedTrashButtonProps> = ({ trashState, onCl
         'bg-gray-100 text-gray-500 w-auto px-3 landscape:px-2'
       } active:scale-90`}
     >
-      {trashState === 'idle' && <Trash2 className="w-[15px] h-[15px] sm:w-[24px] sm:h-[24px] landscape:w-[14px] landscape:h-[14px] sm:landscape:w-[14px] sm:landscape:h-[14px] lg:landscape:w-[22px] lg:landscape:h-[22px]" />}
-      {trashState === 'confirm' && <span className="text-xs sm:text-base landscape:text-xs font-bold whitespace-nowrap">삭제</span>}
-      {trashState === 'deleting' && <Loader2 className="w-[15px] h-[15px] sm:w-[24px] sm:h-[24px] landscape:w-[14px] landscape:h-[14px] sm:landscape:w-[14px] sm:landscape:h-[14px] lg:landscape:w-[22px] lg:landscape:h-[22px] animate-spin" />}
+      {trashState === 'idle' && <Trash2 className="w-[15px] h-[15px] sm:w-[24px] sm:h-[24px] landscape:w-[12px] landscape:h-[12px] sm:landscape:w-[14px] sm:landscape:h-[14px] lg:landscape:w-[22px] lg:landscape:h-[22px]" />}
+      {trashState === 'confirm' && <span className="text-xs sm:text-base landscape:text-[10px] font-bold whitespace-nowrap">삭제</span>}
+      {trashState === 'deleting' && <Loader2 className="w-[15px] h-[15px] sm:w-[24px] sm:h-[24px] landscape:w-[12px] landscape:h-[12px] sm:landscape:w-[14px] sm:landscape:h-[14px] lg:landscape:w-[22px] lg:landscape:h-[22px] animate-spin" />}
     </button>
   );
 };

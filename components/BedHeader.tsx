@@ -52,7 +52,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
   };
 
   return (
-    <div className={`h-8 sm:h-12 landscape:h-8 sm:landscape:h-9 lg:landscape:h-11 w-full flex items-center px-1.5 sm:px-2 border-b border-black/10 shrink-0 gap-1 sm:gap-2 relative transition-colors ${getHeaderBgClass()}`}>
+    <div className={`h-8 sm:h-12 landscape:h-[28px] sm:landscape:h-[30px] lg:landscape:h-11 w-full flex items-center px-1.5 sm:px-2 border-b border-black/10 shrink-0 gap-1 sm:gap-2 relative transition-colors ${getHeaderBgClass()}`}>
       <div className="flex items-center justify-center min-w-[1.5rem] sm:min-w-[3rem] -ml-0.5">
         <span className={`font-black leading-none tracking-tighter select-none ${
            bed.status === BedStatus.COMPLETED 
@@ -60,17 +60,17 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
            : isBedT 
              ? 'text-blue-700 dark:text-blue-300' 
              : 'text-slate-900 dark:text-white'
-        } text-lg sm:text-4xl landscape:text-base sm:landscape:text-lg lg:landscape:text-3xl`}>
+        } text-lg sm:text-4xl landscape:text-sm sm:landscape:text-base lg:landscape:text-2xl`}>
           {isBedT ? 'T' : bed.id}
         </span>
       </div>
 
-      <div className="flex-1 flex items-center gap-1 sm:gap-2 overflow-hidden">
+      <div className="flex-1 flex items-center gap-1 sm:gap-2 min-w-0">
         {bed.status === BedStatus.ACTIVE && currentStep?.enableTimer && (
           <>
              <div 
                onDoubleClick={handleTimerDoubleClick}
-               className={`flex items-center gap-0.5 font-mono font-black text-lg sm:text-4xl landscape:text-base sm:landscape:text-lg lg:landscape:text-3xl leading-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 rounded px-1 py-0.5 select-none transition-colors ${
+               className={`flex items-center gap-0.5 font-mono font-black text-lg sm:text-4xl landscape:text-sm sm:landscape:text-base lg:landscape:text-2xl leading-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 rounded px-1 py-0.5 select-none transition-colors ${
                  isOvertime ? 'animate-pulse text-red-600 dark:text-red-500' : isBedT ? 'text-blue-800 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200'
                } ${bed.isPaused ? 'opacity-40 grayscale-[0.5]' : ''}`}
                title="더블클릭하여 시간 수정"
@@ -97,7 +97,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
           </>
         )}
          {bed.status === BedStatus.COMPLETED && (
-          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold text-[10px] sm:text-base landscape:text-[10px] sm:landscape:text-xs lg:landscape:text-xs bg-slate-200/50 dark:bg-slate-800/50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold text-[10px] sm:text-base landscape:text-[9px] sm:landscape:text-[10px] lg:landscape:text-xs bg-slate-200/50 dark:bg-slate-800/50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
              <CheckCircle className="w-3 h-3 sm:w-5 sm:h-5" />
              <span>완료</span>
           </div>
@@ -105,7 +105,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
       </div>
 
       {bed.status !== BedStatus.IDLE && (
-        <div className="flex items-center gap-0.5 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2 lg:landscape:ml-[20px]">
           <button 
              onClick={(e) => { e.stopPropagation(); onEditClick?.(bed.id); }}
              className={`p-1 sm:p-2 rounded-lg transition-all duration-200 active:scale-90 ${

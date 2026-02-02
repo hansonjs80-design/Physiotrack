@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Syringe, Hand, Zap, ArrowUpFromLine, LucideIcon } from 'lucide-react';
 import { BedState, BedStatus } from '../types';
@@ -50,7 +49,7 @@ export const BedStatusBadges: React.FC<BedStatusBadgesProps> = ({ bed }) => {
   if (activeBadges.length === 0) return null;
 
   return (
-    <div className="absolute bottom-1 right-1 flex flex-wrap justify-end gap-1 z-20 pointer-events-none max-w-[80%]">
+    <div className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 landscape:bottom-0.5 landscape:right-0.5 lg:landscape:bottom-1 lg:landscape:right-1 flex flex-wrap justify-end gap-1 z-20 pointer-events-none max-w-full sm:max-w-[80%] landscape:max-w-full scale-90 sm:scale-100 landscape:scale-[0.80] lg:landscape:scale-100 origin-bottom-right">
       {activeBadges.map((badge) => (
         <div 
           key={badge.label} 

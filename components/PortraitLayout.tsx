@@ -1,4 +1,3 @@
-
 import React, { memo, useCallback, useMemo } from 'react';
 import { BedLayoutProps, BedState } from '../types';
 import { PORTRAIT_PAIRS_CONFIG } from '../constants/layout';

@@ -35,12 +35,13 @@ export const PresetSelectorModal: React.FC<PresetSelectorModalProps> = ({
     isInjection: false,
     isManual: false,
     isESWT: false,
-    isTraction: false
+    isTraction: false,
+    isFluid: false
   });
 
   useEffect(() => {
     if (isOpen) {
-      setOptions({ isInjection: false, isManual: false, isESWT: false, isTraction: false });
+      setOptions({ isInjection: false, isManual: false, isESWT: false, isTraction: false, isFluid: false });
       setPreviewPreset(null);
     }
   }, [isOpen]);

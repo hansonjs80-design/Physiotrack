@@ -1,56 +1,55 @@
+
 import React, { useEffect, useState, useRef, Suspense } from 'react';
-import { usePresetManager } from './hooks/usePresetManager';
-import { useBedManager } from './hooks/useBedManager';
 import { useHeaderScroll } from './hooks/useHeaderScroll';
 import { AppHeader } from './components/AppHeader';
 import { BedLayoutContainer } from './components/BedLayoutContainer';
+import { TreatmentProvider, useTreatmentContext } from './contexts/TreatmentContext';
 import { STANDARD_TREATMENTS } from './constants';
 import { TreatmentStep } from './types';
 
-// Lazy load heavy components to improve initial load performance
+// Lazy load heavy components
 const SettingsPanel = React.lazy(() => import('./components/SettingsPanel').then(module => ({ default: module.SettingsPanel })));
 const PresetSelectorModal = React.lazy(() => import('./components/PresetSelectorModal').then(module => ({ default: module.PresetSelectorModal })));
 const BedEditOverlay = React.lazy(() => import('./components/BedEditOverlay').then(module => ({ default: module.BedEditOverlay })));
 
-const App: React.FC = () => {
-  const { presets, updatePresets } = usePresetManager();
-  
+// Inner component to consume Context
+const AppContent: React.FC = () => {
   const { 
     beds, 
-    selectPreset, 
+    presets, 
+    updatePresets,
+    selectingBedId,
+    setSelectingBedId,
+    editingBedId,
+    setEditingBedId,
+    selectPreset,
     startCustomPreset,
     startQuickTreatment,
-    startTraction, 
-    nextStep,
-    prevStep,
-    swapSteps, 
-    togglePause,
-    jumpToStep, 
+    startTraction,
+    resetAll,
     toggleInjection,
+    toggleFluid,
     toggleTraction,
     toggleESWT,
     toggleManual,
     updateBedSteps,
-    updateMemo,
-    updateBedDuration,
-    clearBed, 
-    resetAll 
-  } = useBedManager(presets);
-  
+    updateBedDuration
+  } = useTreatmentContext();
+
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isDarkMode, setDarkMode] = useState(false);
-  const [selectingBedId, setSelectingBedId] = useState<number | null>(null);
-  const [editingBedId, setEditingBedId] = useState<number | null>(null);
   
   const mainRef = useRef<HTMLElement>(null);
-  const isHeaderVisible = useHeaderScroll(mainRef);
+  const headerRef = useRef<HTMLDivElement>(null);
+  
+  useHeaderScroll(mainRef, headerRef);
 
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  // Handler wrappers to keep JSX clean
+  // Handler wrappers
   const handleSelectPreset = (bedId: number, presetId: string, options: any) => {
     selectPreset(bedId, presetId, options);
     setSelectingBedId(null);
@@ -76,18 +75,10 @@ const App: React.FC = () => {
   const editingBedSteps = editingBed ? (editingBed.customPreset?.steps || presets.find(p => p.id === editingBed.currentPresetId)?.steps || []) : [];
 
   return (
-    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-gray-100 dark:bg-slate-950">
-      {/* Dynamic Header Wrapper */}
-      {/* 
-         Calculate height including safe-area-inset-top for mobile PWA (Notch support). 
-         Standard height 3.5rem (h-14) + env(safe-area-inset-top).
-      */}
+    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-gray-100 dark:bg-slate-950 relative">
       <div 
-        className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 overflow-hidden will-change-[height,opacity,transform] z-40 ${
-          isHeaderVisible 
-            ? 'h-[calc(3.5rem+env(safe-area-inset-top))] opacity-100 translate-y-0' 
-            : 'h-0 opacity-0 -translate-y-full pointer-events-none'
-        }`}
+        ref={headerRef}
+        className="absolute top-0 left-0 right-0 z-40 w-full will-change-transform h-[calc(3.5rem+env(safe-area-inset-top))]"
       >
         <AppHeader 
           onOpenMenu={() => setMenuOpen(true)}
@@ -101,30 +92,12 @@ const App: React.FC = () => {
         className="
           flex-1 overflow-x-auto overflow-y-auto scroll-smooth touch-pan-x touch-pan-y overscroll-contain 
           bg-gray-200 dark:bg-slate-950
-          px-1 py-1 sm:px-2 sm:py-2 md:p-4
-          pl-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))]
+          px-0 sm:px-2 md:p-4
           pb-[calc(env(safe-area-inset-bottom)+1.5rem)]
+          pt-[calc(3.5rem+env(safe-area-inset-top)+0.5rem)]
         "
       >
-        <BedLayoutContainer 
-          beds={beds}
-          presets={presets}
-          onOpenSelector={setSelectingBedId}
-          onEdit={setEditingBedId}
-          onNext={nextStep}
-          onPrev={prevStep}
-          onTogglePause={togglePause}
-          onJumpToStep={jumpToStep}
-          onSwapSteps={swapSteps}
-          onClear={clearBed}
-          onToggleInjection={toggleInjection}
-          onToggleTraction={toggleTraction}
-          onToggleESWT={toggleESWT}
-          onToggleManual={toggleManual}
-          onUpdateSteps={updateBedSteps}
-          onUpdateMemo={updateMemo}
-          onUpdateDuration={updateBedDuration}
-        />
+        <BedLayoutContainer beds={beds} presets={presets} />
       </main>
 
       <Suspense fallback={null}>
@@ -145,6 +118,7 @@ const App: React.FC = () => {
             steps={editingBedSteps}
             onClose={() => setEditingBedId(null)}
             onToggleInjection={toggleInjection}
+            onToggleFluid={toggleFluid}
             onToggleTraction={toggleTraction}
             onToggleESWT={toggleESWT}
             onToggleManual={toggleManual}
@@ -166,6 +140,14 @@ const App: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
       )}
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <TreatmentProvider>
+      <AppContent />
+    </TreatmentProvider>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TreatmentStep, BedState } from '../types';
 import { BedEditHeader } from './bed-edit/BedEditHeader';
@@ -10,6 +11,7 @@ interface BedEditOverlayProps {
   steps: TreatmentStep[];
   onClose: () => void;
   onToggleInjection?: (bedId: number) => void;
+  onToggleFluid?: (bedId: number) => void;
   onToggleTraction?: (bedId: number) => void;
   onToggleESWT?: (bedId: number) => void;
   onToggleManual?: (bedId: number) => void;
@@ -22,6 +24,7 @@ export const BedEditOverlay: React.FC<BedEditOverlayProps> = ({
   steps,
   onClose,
   onToggleInjection,
+  onToggleFluid,
   onToggleTraction,
   onToggleESWT,
   onToggleManual,
@@ -44,6 +47,7 @@ export const BedEditOverlay: React.FC<BedEditOverlayProps> = ({
            <BedEditFlags 
              bed={bed} 
              onToggleInjection={onToggleInjection}
+             onToggleFluid={onToggleFluid}
              onToggleManual={onToggleManual}
              onToggleESWT={onToggleESWT}
              onToggleTraction={onToggleTraction}

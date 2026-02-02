@@ -1,3 +1,4 @@
+
 import { Preset, TreatmentStep } from './types';
 
 const createStep = (name: string, minutes: number, enableTimer: boolean, color: string): TreatmentStep => ({
@@ -52,7 +53,7 @@ export const DEFAULT_PRESETS: Preset[] = [
 export const TOTAL_BEDS = 11;
 
 export const SUPABASE_INIT_SQL = `
--- [PhysioTrack DB Setup Script v20]
+-- [PhysioTrack DB Setup Script v21]
 -- 1. Create tables
 create table if not exists public.beds (
   id bigint primary key,
@@ -65,6 +66,7 @@ create table if not exists public.beds (
   original_duration integer,
   is_paused boolean not null default false,
   is_injection boolean not null default false,
+  is_fluid boolean not null default false,
   is_traction boolean not null default false,
   is_eswt boolean not null default false,
   is_manual boolean not null default false,
@@ -72,7 +74,7 @@ create table if not exists public.beds (
   updated_at timestamptz default now()
 );
 
--- Ensure all flags exist (Fixes 'column not found' errors)
+-- Ensure all flags exist
 do $$ 
 begin 
   if not exists (select 1 from information_schema.columns where table_name = 'beds' and column_name = 'is_manual') then
@@ -80,6 +82,9 @@ begin
   end if;
   if not exists (select 1 from information_schema.columns where table_name = 'beds' and column_name = 'is_eswt') then
     alter table public.beds add column is_eswt boolean not null default false;
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'beds' and column_name = 'is_fluid') then
+    alter table public.beds add column is_fluid boolean not null default false;
   end if;
 end $$;
 

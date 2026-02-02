@@ -5,20 +5,20 @@ import { BedBay } from './BedBay';
 interface PortraitBedRowProps extends Omit<BedLayoutProps, 'beds'> {
   leftBed: BedState;
   rightBed: BedState | null;
+  beds: BedState[]; // Explicitly include beds to match BedLayoutProps logic if needed, or just pass individual
 }
 
 export const PortraitBedRow: React.FC<PortraitBedRowProps> = memo(({ 
   leftBed, 
   rightBed, 
-  ...props 
+  presets
 }) => {
   return (
-    // Gap reduced from gap-3 (12px) to gap-1.5 (6px) for mobile to increase card width
     <div className="grid grid-cols-2 gap-1.5 sm:gap-5 md:gap-6">
       <div className="flex flex-col">
         <BedBay 
-          {...props}
-          beds={[leftBed]} // Pass specific bed as array
+          beds={[leftBed]}
+          presets={presets}
           side="left"
         />
       </div>
@@ -26,8 +26,8 @@ export const PortraitBedRow: React.FC<PortraitBedRowProps> = memo(({
       <div className="flex flex-col">
         {rightBed ? (
           <BedBay 
-            {...props}
-            beds={[rightBed]} // Pass specific bed as array
+            beds={[rightBed]}
+            presets={presets}
             side="right"
           />
         ) : (

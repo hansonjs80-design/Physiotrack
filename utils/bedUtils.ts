@@ -66,33 +66,31 @@ export const getStepColor = (
 };
 
 export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => {
-  // 기본 테두리를 검정색(border-black)으로 설정하고 두께를 border-[1.5px]로 조정 (기존 border-2에서 감소)
+  // 기본 테두리를 검정색(border-black)으로 설정하고 두께를 border-[1.5px]로 조정
   let base = "relative flex flex-col h-full rounded-lg shadow-md border-[1.5px] border-black dark:border-slate-200 overflow-hidden select-none transition-all duration-300 ";
   
-  // landscape:min-h-[132px] -> 118px (reduced by ~10%)
   const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[118px] sm:landscape:min-h-[118px] lg:landscape:min-h-[216px] ";
 
-  // Bed T (ID: 11) 만의 고유 테마 설정
   const isBedT = bed.id === 11;
 
   let statusClasses = "";
   if (bed.status === BedStatus.COMPLETED) {
      statusClasses = "bg-gray-300 dark:bg-slate-700 grayscale-[0.2]";
   } else if (isOvertime) {
-     // 초과 상태일 때만 테두리를 빨간색으로 변경하여 시각적 경고 제공
+     // 초과 상태일 때 테두리/링 경고
      statusClasses = "bg-white dark:bg-slate-800 border-red-500 dark:border-red-500 ring-2 ring-red-500 dark:ring-red-500 animate-pulse ";
   } else {
-     // Bed T: 기존 Amber에서 Blue 계열로 변경 (연한 파랑 배경)
      if (isBedT) {
         statusClasses = "bg-blue-50/60 dark:bg-blue-900/10 ring-1 ring-blue-200/50 dark:ring-blue-900/30 ";
      } else {
         statusClasses = "bg-white dark:bg-slate-800 ";
      }
      
-     // 상태 뱃지/플래그에 따른 추가 강조 (테두리 색상은 검정 유지하며 링 효과로 구분)
+     // 상태 뱃지/플래그에 따른 추가 강조
      if (bed.isInjection) statusClasses += 'ring-2 ring-red-100 dark:ring-red-900/20';
      else if (bed.isESWT) statusClasses += 'ring-2 ring-blue-100 dark:ring-blue-900/20';
      else if (bed.isManual) statusClasses += 'ring-2 ring-violet-100 dark:ring-violet-900/20';
+     else if (bed.isFluid) statusClasses += 'ring-2 ring-cyan-100 dark:ring-cyan-900/20';
      else if (bed.isTraction && !isBedT) statusClasses += 'ring-2 ring-orange-100 dark:ring-orange-900/20';
   }
 
@@ -122,6 +120,7 @@ export const mapRowToBed = (row: any): Partial<BedState> => {
   if (row.is_paused !== undefined) result.isPaused = row.is_paused;
   if (row.original_duration !== undefined) result.originalDuration = row.original_duration;
   if (row.is_injection !== undefined) result.isInjection = !!row.is_injection;
+  if (row.is_fluid !== undefined) result.isFluid = !!row.is_fluid;
   if (row.is_traction !== undefined) result.isTraction = !!row.is_traction;
   if (row.is_eswt !== undefined) result.isESWT = !!row.is_eswt;
   if (row.is_manual !== undefined) result.isManual = !!row.is_manual;
@@ -141,6 +140,7 @@ export const mapBedToDbPayload = (updates: Partial<BedState>): any => {
   if (updates.startTime !== undefined) payload.start_time = updates.startTime;
   if (updates.isPaused !== undefined) payload.is_paused = updates.isPaused;
   if (updates.isInjection !== undefined) payload.is_injection = updates.isInjection;
+  if (updates.isFluid !== undefined) payload.is_fluid = updates.isFluid;
   if (updates.isTraction !== undefined) payload.is_traction = updates.isTraction;
   if (updates.isESWT !== undefined) payload.is_eswt = updates.isESWT;
   if (updates.isManual !== undefined) payload.is_manual = updates.isManual;

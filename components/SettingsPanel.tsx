@@ -24,15 +24,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   return (
     <div className={`fixed inset-y-0 left-0 w-full sm:w-96 bg-white dark:bg-slate-800 shadow-2xl transform transition-transform duration-300 z-[60] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-brand-600 text-white shrink-0">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <SettingsIcon className="w-5 h-5" />
-            설정 및 관리
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-brand-700 rounded-full">
-            <X className="w-6 h-6" />
-          </button>
+        {/* Header: Added safe-area padding to prevent status bar overlap */}
+        <div className="bg-brand-600 text-white shrink-0 pt-[env(safe-area-inset-top)]">
+          <div className="p-4 border-b border-brand-500 flex justify-between items-center h-14 sm:h-auto">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <SettingsIcon className="w-5 h-5" />
+              설정 및 관리
+            </h2>
+            <button onClick={onClose} className="p-2 hover:bg-brand-700 rounded-full transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -78,8 +80,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           )}
         </div>
         
-        {/* Footer */}
-        <div className="p-3 border-t border-gray-200 dark:border-slate-700 text-center text-[10px] text-gray-400 bg-white dark:bg-slate-800 shrink-0">
+        {/* Footer: Added safe-area padding for bottom */}
+        <div className="p-3 border-t border-gray-200 dark:border-slate-700 text-center text-[10px] text-gray-400 bg-white dark:bg-slate-800 shrink-0 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
           PhysioTrack Pro v2.0
         </div>
       </div>

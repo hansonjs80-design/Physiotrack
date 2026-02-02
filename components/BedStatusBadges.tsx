@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Syringe, Hand, Zap, ArrowUpFromLine, LucideIcon } from 'lucide-react';
+import { Syringe, Hand, Zap, ArrowUpFromLine, Droplet, LucideIcon } from 'lucide-react';
 import { BedState, BedStatus } from '../types';
 
 interface BedStatusBadgesProps {
@@ -21,6 +22,12 @@ const BADGES: BadgeConfig[] = [
     colorClass: 'bg-red-100/90 dark:bg-red-900/90 text-red-700 dark:text-red-200', 
     iconClass: 'text-red-600 dark:text-red-400',
     borderClass: 'border-red-200 dark:border-red-800'
+  },
+  { 
+    key: 'isFluid', label: '수액', icon: Droplet, 
+    colorClass: 'bg-cyan-100/90 dark:bg-cyan-900/90 text-cyan-700 dark:text-cyan-200', 
+    iconClass: 'text-cyan-600 dark:text-cyan-400',
+    borderClass: 'border-cyan-200 dark:border-cyan-800'
   },
   { 
     key: 'isManual', label: '도수', icon: Hand, 

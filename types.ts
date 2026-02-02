@@ -31,6 +31,7 @@ export interface BedState {
   originalDuration?: number; // Total duration of the current step (for sync)
   isPaused: boolean;
   isInjection: boolean; // Tracks if the patient is an injection patient
+  isFluid: boolean; // Tracks if the patient has Fluids (IV)
   isTraction: boolean; // Tracks if the patient needs traction
   isESWT: boolean; // Tracks if the patient needs Shockwave (ESWT)
   isManual: boolean; // Tracks if the patient needs Manual Therapy (Do-su)
@@ -46,23 +47,8 @@ export interface AppState {
   isDarkMode: boolean;
 }
 
-// Layout Props Interface for cleaner component signatures
+// Layout Props Interface reduced to only what's needed for rendering structure
 export interface BedLayoutProps {
   beds: BedState[];
   presets: Preset[];
-  onOpenSelector: (bedId: number) => void;
-  onEdit: (bedId: number) => void;
-  onNext: (bedId: number) => void;
-  onPrev: (bedId: number) => void;
-  onTogglePause: (bedId: number) => void;
-  onSwapSteps: (bedId: number, idx1: number, idx2: number) => void;
-  onJumpToStep?: (bedId: number, stepIndex: number) => void; // Keeping optional for backward compat if needed
-  onClear: (bedId: number) => void;
-  onToggleInjection: (bedId: number) => void;
-  onToggleTraction: (bedId: number) => void;
-  onToggleESWT: (bedId: number) => void;
-  onToggleManual: (bedId: number) => void;
-  onUpdateSteps: (bedId: number, steps: TreatmentStep[]) => void;
-  onUpdateMemo: (bedId: number, stepIndex: number, memo: string | null) => void;
-  onUpdateDuration: (bedId: number, duration: number) => void;
 }

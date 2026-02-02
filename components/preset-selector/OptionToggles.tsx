@@ -1,28 +1,29 @@
 
 import React from 'react';
-import { Syringe, Hand, Zap, ArrowUpFromLine } from 'lucide-react';
+import { Syringe, Hand, Zap, ArrowUpFromLine, Droplet } from 'lucide-react';
 
 interface OptionTogglesProps {
-  options: { isInjection: boolean; isManual: boolean; isESWT: boolean; isTraction: boolean };
-  setOptions: React.Dispatch<React.SetStateAction<{ isInjection: boolean; isManual: boolean; isESWT: boolean; isTraction: boolean }>>;
+  options: { isInjection: boolean; isManual: boolean; isESWT: boolean; isTraction: boolean; isFluid?: boolean };
+  setOptions: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export const OptionToggles: React.FC<OptionTogglesProps> = ({ options, setOptions }) => {
-  const toggle = (key: keyof typeof options) => {
-    setOptions(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggle = (key: string) => {
+    setOptions((prev: any) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const buttons = [
-    { key: 'isInjection' as const, label: '주사', icon: Syringe, color: 'red' },
-    { key: 'isManual' as const, label: '도수', icon: Hand, color: 'violet' },
-    { key: 'isESWT' as const, label: '충격파', icon: Zap, color: 'blue' },
-    { key: 'isTraction' as const, label: '견인', icon: ArrowUpFromLine, color: 'orange' },
+    { key: 'isInjection', label: '주사', icon: Syringe, color: 'red' },
+    { key: 'isFluid', label: '수액', icon: Droplet, color: 'cyan' },
+    { key: 'isManual', label: '도수', icon: Hand, color: 'violet' },
+    { key: 'isESWT', label: '충격파', icon: Zap, color: 'blue' },
+    { key: 'isTraction', label: '견인', icon: ArrowUpFromLine, color: 'orange' },
   ];
 
   return (
-    <div className="p-3 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 grid grid-cols-4 gap-2 shrink-0">
+    <div className="p-3 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 grid grid-cols-5 gap-2 shrink-0">
       {buttons.map(({ key, label, icon: Icon, color }) => {
-        const isActive = options[key];
+        const isActive = options[key as keyof typeof options];
         return (
           <button
             key={key}
@@ -34,7 +35,7 @@ export const OptionToggles: React.FC<OptionTogglesProps> = ({ options, setOption
             }`}
           >
             <Icon className={`w-4 h-4 mb-1 ${isActive ? 'animate-bounce' : ''}`} />
-            <span className="text-[10px] font-bold">{label}</span>
+            <span className="text-[10px] font-bold whitespace-nowrap">{label}</span>
           </button>
         );
       })}

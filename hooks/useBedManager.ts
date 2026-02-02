@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { BedState, BedStatus, Preset, TreatmentStep } from '../types';
 import { useLocalStorage } from './useLocalStorage';
@@ -9,6 +10,7 @@ import { mapBedToDbPayload, calculateRemainingTime } from '../utils/bedUtils';
 
 interface SelectPresetOptions {
   isInjection?: boolean;
+  isFluid?: boolean;
   isTraction?: boolean;
   isESWT?: boolean;
   isManual?: boolean;
@@ -26,6 +28,7 @@ export const useBedManager = (presets: Preset[]) => {
       startTime: null,
       isPaused: false,
       isInjection: false,
+      isFluid: false,
       isTraction: false,
       isESWT: false,
       isManual: false,
@@ -80,6 +83,7 @@ export const useBedManager = (presets: Preset[]) => {
       originalDuration: firstStep.duration,
       isPaused: false,
       isInjection: options?.isInjection || false,
+      isFluid: options?.isFluid || false,
       isTraction: options?.isTraction || false,
       isESWT: options?.isESWT || false,
       isManual: options?.isManual || false,
@@ -108,6 +112,7 @@ export const useBedManager = (presets: Preset[]) => {
       originalDuration: firstStep.duration,
       isPaused: false,
       isInjection: options?.isInjection || false,
+      isFluid: options?.isFluid || false,
       isTraction: options?.isTraction || false,
       isESWT: options?.isESWT || false,
       isManual: options?.isManual || false,
@@ -182,8 +187,6 @@ export const useBedManager = (presets: Preset[]) => {
     // Perform swap
     [steps[idx1], steps[idx2]] = [steps[idx2], steps[idx1]];
 
-    // If we are modifying a standard preset, we must convert it to a custom preset first
-    // to avoid affecting other beds sharing the same preset ID.
     const newCustomPreset: Preset = {
        id: bed.customPreset?.id || `custom-swap-${Date.now()}`,
        name: bed.customPreset?.name || (presets.find(p => p.id === bed.currentPresetId)?.name || 'Custom'),
@@ -192,7 +195,6 @@ export const useBedManager = (presets: Preset[]) => {
 
     const updates: Partial<BedState> = {
        customPreset: newCustomPreset,
-       // Also swap memos if they exist
        memos: {
          ...bed.memos,
          [idx1]: bed.memos[idx2],
@@ -200,7 +202,6 @@ export const useBedManager = (presets: Preset[]) => {
        }
     };
     
-    // If the currently active step was swapped, reset the timer for the NEW step at the current index
     if (bed.status === BedStatus.ACTIVE && (bed.currentStepIndex === idx1 || bed.currentStepIndex === idx2)) {
        const currentStepItem = steps[bed.currentStepIndex];
        updates.remainingTime = currentStepItem.duration;
@@ -243,6 +244,7 @@ export const useBedManager = (presets: Preset[]) => {
       remainingTime: 0,
       isPaused: false,
       isInjection: false,
+      isFluid: false,
       isTraction: false,
       isESWT: false,
       isManual: false,
@@ -288,6 +290,7 @@ export const useBedManager = (presets: Preset[]) => {
        // Deprecated but kept for type signature compatibility if needed
     },
     toggleInjection: (id: number) => toggleFlag(id, 'isInjection'),
+    toggleFluid: (id: number) => toggleFlag(id, 'isFluid'),
     toggleTraction: (id: number) => toggleFlag(id, 'isTraction'),
     toggleESWT: (id: number) => toggleFlag(id, 'isESWT'),
     toggleManual: (id: number) => toggleFlag(id, 'isManual'),

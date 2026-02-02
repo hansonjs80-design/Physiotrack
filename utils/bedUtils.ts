@@ -1,4 +1,3 @@
-
 import { BedState, BedStatus, TreatmentStep, Preset } from '../types';
 
 // --- Formatters ---
@@ -96,6 +95,68 @@ export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => 
 
   return base + heightClasses + statusClasses;
 };
+
+// --- Sound & Vibration Logic ---
+
+export const playAlarmPattern = () => {
+  // 1. Vibration
+  // Detect mobile to apply stronger vibration
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    if (isMobile) {
+      // Mobile: Strong, repetitive "Phone Call" style vibration
+      // 500ms on, 200ms off, repeated 5 times (approx 3.5 seconds)
+      navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
+    } else {
+      // Desktop: Subtler vibration
+      navigator.vibrate([200, 100, 200]);
+    }
+  }
+
+  // 2. Audio (Digital Alarm Style: Beep-Beep-Beep ... Beep-Beep-Beep)
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type = 'square'; // Distinct digital sound
+    osc.frequency.setValueAtTime(1050, now); // Slightly higher pitch for mobile speakers
+
+    // Pattern: 3 beeps (0.1s on, 0.1s off) then pause (0.4s) -> Repeated 3 times
+    const beepLength = 0.1;
+    const gapLength = 0.1;
+    const pauseLength = 0.5;
+    
+    let startTime = now;
+    
+    // Create 3 groups of beeps
+    for (let group = 0; group < 3; group++) {
+      // Each group has 3 beeps
+      for (let i = 0; i < 3; i++) {
+        gain.gain.setValueAtTime(0.15, startTime); // Volume
+        gain.gain.setValueAtTime(0, startTime + beepLength);
+        startTime += beepLength + gapLength;
+      }
+      startTime += pauseLength; // Pause between groups
+    }
+
+    osc.start(now);
+    osc.stop(startTime);
+    
+  } catch (e) {
+    console.error("Audio playback failed", e);
+  }
+};
+
 
 // --- Data Mapping & Logic ---
 

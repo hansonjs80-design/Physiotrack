@@ -1,11 +1,11 @@
-// Import React to provide access to the React namespace for type definitions like React.Dispatch and React.SetStateAction
 import React, { useEffect, useRef } from 'react';
 import { BedState, Preset } from '../types';
-import { calculateRemainingTime } from '../utils/bedUtils';
+import { calculateRemainingTime, playAlarmPattern } from '../utils/bedUtils';
 
 export const useBedTimer = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,
-  presets: Preset[]
+  presets: Preset[],
+  isSoundEnabled: boolean
 ) => {
   const prevRemainingTimes = useRef<{ [key: number]: number }>({});
 
@@ -22,16 +22,21 @@ export const useBedTimer = (
 
             const prevRemaining = prevRemainingTimes.current[bed.id];
 
-            // Trigger haptic feedback when timer hits zero or crosses into negative (overtime)
-            // Ensure we only trigger once when it completes
+            // Trigger alarm when timer hits zero exactly or crosses into negative
+            // Ensure we only trigger ONCE per transition
             if ((prevRemaining > 0 && newRemaining <= 0) || (prevRemaining === undefined && newRemaining === 0)) {
-              if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate([500, 200, 500]);
-              }
+               // Only play if enabled
+               if (isSoundEnabled) {
+                 playAlarmPattern();
+               } else {
+                 // Fallback: simple short vibration if sound disabled (haptic feedback only)
+                 if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                   navigator.vibrate([200]);
+                 }
+               }
             }
             
             prevRemainingTimes.current[bed.id] = newRemaining;
-
             return { ...bed, remainingTime: newRemaining };
           }
           
@@ -43,5 +48,5 @@ export const useBedTimer = (
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [presets, setBeds]);
+  }, [presets, setBeds, isSoundEnabled]);
 };

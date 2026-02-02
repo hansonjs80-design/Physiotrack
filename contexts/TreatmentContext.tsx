@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { BedState, Preset, TreatmentStep } from '../types';
 import { usePresetManager } from '../hooks/usePresetManager';
 import { useBedManager } from '../hooks/useBedManager';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STANDARD_TREATMENTS } from '../constants';
 
 interface TreatmentContextType {
@@ -10,6 +10,10 @@ interface TreatmentContextType {
   presets: Preset[];
   updatePresets: (presets: Preset[]) => void;
   
+  // Settings
+  isSoundEnabled: boolean;
+  toggleSound: () => void;
+
   // UI State for Modals
   selectingBedId: number | null;
   setSelectingBedId: (id: number | null) => void;
@@ -42,14 +46,23 @@ const TreatmentContext = createContext<TreatmentContextType | undefined>(undefin
 
 export const TreatmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { presets, updatePresets } = usePresetManager();
-  const bedManager = useBedManager(presets);
+  
+  // Sound setting persisted in localStorage (default: false)
+  const [isSoundEnabled, setIsSoundEnabled] = useLocalStorage<boolean>('physio-sound-enabled', false);
+  
+  // Pass the sound setting to the manager (and timer)
+  const bedManager = useBedManager(presets, isSoundEnabled);
   
   const [selectingBedId, setSelectingBedId] = useState<number | null>(null);
   const [editingBedId, setEditingBedId] = useState<number | null>(null);
 
+  const toggleSound = () => setIsSoundEnabled(prev => !prev);
+
   const value = {
     presets,
     updatePresets,
+    isSoundEnabled,
+    toggleSound,
     ...bedManager,
     selectingBedId,
     setSelectingBedId,

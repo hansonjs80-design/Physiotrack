@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Database, List, Settings as SettingsIcon } from 'lucide-react';
+import { X, Database, List, Settings as SettingsIcon, Sliders } from 'lucide-react';
 import { Preset } from '../types';
 import { SettingsDatabaseTab } from './SettingsDatabaseTab';
 import { SettingsPresetTab } from './SettingsPresetTab';
+import { SettingsPreferencesTab } from './SettingsPreferencesTab';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onUpdatePresets,
   onResetAllBeds
 }) => {
-  const [activeTab, setActiveTab] = useState<'connection' | 'presets'>('connection');
+  const [activeTab, setActiveTab] = useState<'connection' | 'presets' | 'preferences'>('connection');
   
   return (
     <div className={`fixed inset-y-0 left-0 w-full sm:w-96 bg-white dark:bg-slate-800 shadow-2xl transform transition-transform duration-300 z-[60] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -48,7 +49,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
              }`}
            >
              <Database className="w-4 h-4" />
-             데이터 연동
+             <span className="hidden xs:inline">데이터</span>
+             <span className="xs:hidden">DB</span>
            </button>
            <button 
              onClick={() => setActiveTab('presets')}
@@ -59,7 +61,20 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
              }`}
            >
              <List className="w-4 h-4" />
-             처방 목록
+             <span className="hidden xs:inline">처방 목록</span>
+             <span className="xs:hidden">처방</span>
+           </button>
+           <button 
+             onClick={() => setActiveTab('preferences')}
+             className={`flex-1 py-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+               activeTab === 'preferences' 
+                 ? 'text-brand-600 border-b-2 border-brand-600 dark:text-brand-400 dark:border-brand-400 bg-brand-50/50 dark:bg-slate-700/50' 
+                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+             }`}
+           >
+             <Sliders className="w-4 h-4" />
+             <span className="hidden xs:inline">기본 설정</span>
+             <span className="xs:hidden">설정</span>
            </button>
         </div>
 
@@ -77,6 +92,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               presets={presets} 
               onUpdatePresets={onUpdatePresets} 
             />
+          )}
+
+          {activeTab === 'preferences' && (
+            <SettingsPreferencesTab />
           )}
         </div>
         

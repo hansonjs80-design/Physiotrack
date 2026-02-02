@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { BedState, BedStatus, Preset, TreatmentStep } from '../types';
 import { useLocalStorage } from './useLocalStorage';
@@ -16,7 +15,7 @@ interface SelectPresetOptions {
   isManual?: boolean;
 }
 
-export const useBedManager = (presets: Preset[]) => {
+export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
   const [localBeds, setLocalBeds] = useLocalStorage<BedState[]>('physio-beds-v8', 
     Array.from({ length: TOTAL_BEDS }, (_, i) => ({
       id: i + 1,
@@ -43,7 +42,7 @@ export const useBedManager = (presets: Preset[]) => {
     bedsRef.current = beds;
   }, [beds]);
 
-  useBedTimer(setBeds, presets);
+  useBedTimer(setBeds, presets, isSoundEnabled);
   const { realtimeStatus } = useBedRealtime(setBeds, setLocalBeds);
 
   useEffect(() => {

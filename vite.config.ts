@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -7,9 +8,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             // Cache Tailwind CDN for offline usage
@@ -25,6 +28,21 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+             // Cache External Icons (Flaticon)
+             urlPattern: /^https:\/\/cdn-icons-png\.flaticon\.com/,
+             handler: 'StaleWhileRevalidate',
+             options: {
+               cacheName: 'external-icons-cache',
+               expiration: {
+                 maxEntries: 50,
+                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+               },
+               cacheableResponse: {
+                 statuses: [0, 200]
+               }
+             }
           },
           {
              // Cache Google Fonts
@@ -46,8 +64,9 @@ export default defineConfig({
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
+        scope: '/',
         start_url: '/',
-        orientation: 'any',
+        orientation: 'portrait',
         icons: [
           {
             src: 'https://cdn-icons-png.flaticon.com/512/3063/3063176.png',

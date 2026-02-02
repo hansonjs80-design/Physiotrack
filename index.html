@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png" />
@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="PhysioTrack" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="실시간 물리치료 병상 관리 시스템" />
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png" />
     
@@ -27,11 +28,12 @@
         padding: 0;
         overflow: hidden;
         background-color: #f1f5f9;
+        /* iOS 바운스 효과 방지 및 터치 동작 제어 */
+        overscroll-behavior-y: none;
       }
       .dark html, .dark body { background-color: #020617; }
       
       body {
-        overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
         user-select: none;

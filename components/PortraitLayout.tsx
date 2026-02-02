@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { BedLayoutProps, BedState } from '../types';
 import { PORTRAIT_PAIRS_CONFIG } from '../constants/layout';
-import { BedBay } from './BedBay';
+import { PortraitBedRow } from './PortraitBedRow';
 
 export const PortraitLayout: React.FC<BedLayoutProps> = memo((props) => {
   const { beds } = props;
@@ -20,36 +20,24 @@ export const PortraitLayout: React.FC<BedLayoutProps> = memo((props) => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 pb-32 max-w-4xl mx-auto px-0.5 sm:px-1.5">
+    // px-0.5 removed for mobile to maximize width (px-0 implicit)
+    <div className="flex flex-col gap-4 pb-32 max-w-4xl mx-auto px-0 sm:px-1.5">
       {groupedPairs.map((group, groupIdx) => (
         <div key={`group-${groupIdx}`} className="flex flex-col gap-1.5 sm:gap-2">
-          {group.map((pair, idx) => (
-            <div key={`${groupIdx}-${idx}`} className="grid grid-cols-2 gap-3 sm:gap-5 md:gap-6">
-              <div className="flex flex-col">
-                <BedBay 
-                  {...props}
-                  side="left"
-                  beds={[getBed(pair.left)]}
-                />
-              </div>
+          {group.map((pair, idx) => {
+            // Pre-resolve beds here to pass as stable objects to the memoized row
+            const leftBed = getBed(pair.left);
+            const rightBed = pair.right ? getBed(pair.right) : null;
 
-              <div className="flex flex-col">
-                {pair.right !== null ? (
-                  <BedBay 
-                    {...props}
-                    side="right"
-                    beds={[getBed(pair.right)]}
-                  />
-                ) : (
-                  <div className="h-full flex flex-col gap-2 p-4 rounded-2xl border-2 border-dashed border-gray-200/50 dark:border-slate-800/50 bg-transparent opacity-20 select-none items-center justify-center">
-                    <span className="text-gray-400 dark:text-slate-700 text-[10px] font-black uppercase tracking-widest">
-                      RESERVED
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            return (
+              <PortraitBedRow 
+                key={`${groupIdx}-${idx}`}
+                leftBed={leftBed}
+                rightBed={rightBed}
+                {...props} // Pass all handler props
+              />
+            );
+          })}
         </div>
       ))}
     </div>

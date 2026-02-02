@@ -36,14 +36,16 @@ export const useHeaderScroll = (scrollContainerRef: RefObject<HTMLElement | null
           if (currentScrollY < 60) {
             setIsHeaderVisible(true);
           } 
-          // 스크롤 변화량이 일정 수준(10px) 이상일 때만 반응하여 '통통 튀는' 현상 방지
-          else if (absDelta > 10) {
+          // 스크롤 변화량이 일정 수준 이상일 때만 반응
+          // 기존 10px에서 4px로 낮춰서 부드러운 스크롤에도 자연스럽게 반응하도록 개선
+          else if (absDelta > 4) {
             if (delta > 0) {
               // 아래로 스크롤 중 (Delta 양수) -> 헤더 숨김
-              setIsHeaderVisible(false);
+              // 이미 숨겨진 상태라면 불필요한 상태 업데이트 방지
+              setIsHeaderVisible((prev) => (prev ? false : prev));
             } else {
               // 위로 스크롤 중 (Delta 음수) -> 헤더 표시
-              setIsHeaderVisible(true);
+              setIsHeaderVisible((prev) => (!prev ? true : prev));
             }
           }
 

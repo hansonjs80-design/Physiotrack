@@ -82,9 +82,9 @@ export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => 
      // 초과 상태일 때만 테두리를 빨간색으로 변경하여 시각적 경고 제공
      statusClasses = "bg-white dark:bg-slate-800 border-red-500 dark:border-red-500 ring-2 ring-red-500 dark:ring-red-500 animate-pulse ";
   } else {
-     // Bed T는 기본 배경색을 amber 톤으로 설정하되 테두리는 검정색 유지
+     // Bed T: 기존 Amber에서 Blue 계열로 변경 (연한 파랑 배경)
      if (isBedT) {
-        statusClasses = "bg-amber-50/40 dark:bg-amber-900/10 ring-1 ring-amber-200/50 dark:ring-amber-900/30 ";
+        statusClasses = "bg-blue-50/60 dark:bg-blue-900/10 ring-1 ring-blue-200/50 dark:ring-blue-900/30 ";
      } else {
         statusClasses = "bg-white dark:bg-slate-800 ";
      }

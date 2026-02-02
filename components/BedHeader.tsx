@@ -46,19 +46,25 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
       return 'bg-gray-300/50 dark:bg-slate-800/50';
     }
     if (isBedT) {
-      return 'bg-blue-100/80 dark:bg-blue-900/40 border-b-blue-200 dark:border-b-blue-800/50';
+      // 기존 blue-100/80에서 blue-300으로 진하게 변경 (약 20% 더 진한 느낌)
+      return 'bg-blue-300 dark:bg-blue-800 border-b-blue-400 dark:border-b-blue-700';
     }
     return 'bg-gray-50 dark:bg-slate-700';
   };
 
   return (
     <div className={`h-8 sm:h-12 landscape:h-[28px] sm:landscape:h-[30px] lg:landscape:h-11 w-full flex items-center px-1.5 sm:px-2 border-b border-black/10 shrink-0 gap-1 sm:gap-2 relative transition-colors ${getHeaderBgClass()}`}>
-      <div className="flex items-center justify-center min-w-[1.5rem] sm:min-w-[3rem] -ml-0.5">
+      {/* 
+        Bed ID Indicator
+        - landscape:-ml-3: Mobile landscape adjustment (shift left ~12px)
+        - lg:landscape:-ml-0.5: Reset for desktop/large landscape
+      */}
+      <div className="flex items-center justify-center min-w-[1.5rem] sm:min-w-[3rem] -ml-0.5 landscape:-ml-3 lg:landscape:-ml-0.5">
         <span className={`font-black leading-none tracking-tighter select-none ${
            bed.status === BedStatus.COMPLETED 
            ? 'text-gray-400 dark:text-gray-600' 
            : isBedT 
-             ? 'text-blue-700 dark:text-blue-300' 
+             ? 'text-blue-900 dark:text-blue-100' // 헤더 배경이 진해졌으므로 텍스트도 진하게(900) 조정
              : 'text-slate-900 dark:text-white'
         } text-lg sm:text-4xl landscape:text-sm sm:landscape:text-base lg:landscape:text-2xl`}>
           {isBedT ? 'T' : bed.id}
@@ -71,7 +77,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
              <div 
                onDoubleClick={handleTimerDoubleClick}
                className={`flex items-center gap-0.5 font-mono font-black text-lg sm:text-4xl landscape:text-sm sm:landscape:text-base lg:landscape:text-2xl leading-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 rounded px-1 py-0.5 select-none transition-colors ${
-                 isOvertime ? 'animate-pulse text-red-600 dark:text-red-500' : isBedT ? 'text-blue-800 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200'
+                 isOvertime ? 'animate-pulse text-red-600 dark:text-red-500' : isBedT ? 'text-blue-900 dark:text-blue-100' : 'text-slate-800 dark:text-slate-200'
                } ${bed.isPaused ? 'opacity-40 grayscale-[0.5]' : ''}`}
                title="더블클릭하여 시간 수정"
              >
@@ -84,7 +90,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
                  bed.isPaused 
                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' 
                    : isBedT 
-                     ? 'text-blue-400 hover:text-blue-600 hover:bg-blue-50/50' 
+                     ? 'text-blue-700 hover:text-blue-900 hover:bg-blue-100/50' 
                      : 'text-gray-400 hover:text-brand-600 hover:bg-brand-50'
                }`}
              >
@@ -110,7 +116,7 @@ export const BedHeader = memo(({ bed, currentStep, onTrashClick, trashState, onE
              onClick={(e) => { e.stopPropagation(); onEditClick?.(bed.id); }}
              className={`p-1 sm:p-2 rounded-lg transition-all duration-200 active:scale-90 ${
                isBedT 
-                 ? 'text-blue-400 hover:text-blue-600 hover:bg-blue-50' 
+                 ? 'text-blue-600 hover:text-blue-900 hover:bg-blue-100/50' 
                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-600'
              }`}
           >

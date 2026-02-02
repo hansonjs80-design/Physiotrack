@@ -76,12 +76,16 @@ const App: React.FC = () => {
   const editingBedSteps = editingBed ? (editingBed.customPreset?.steps || presets.find(p => p.id === editingBed.currentPresetId)?.steps || []) : [];
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gray-100 dark:bg-slate-950">
+    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-gray-100 dark:bg-slate-950">
       {/* Dynamic Header Wrapper */}
+      {/* 
+         Calculate height including safe-area-inset-top for mobile PWA (Notch support). 
+         Standard height 3.5rem (h-14) + env(safe-area-inset-top).
+      */}
       <div 
-        className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+        className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 overflow-hidden will-change-[height,opacity,transform] z-40 ${
           isHeaderVisible 
-            ? 'h-14 opacity-100 translate-y-0' 
+            ? 'h-[calc(3.5rem+env(safe-area-inset-top))] opacity-100 translate-y-0' 
             : 'h-0 opacity-0 -translate-y-full pointer-events-none'
         }`}
       >
@@ -94,7 +98,13 @@ const App: React.FC = () => {
 
       <main 
         ref={mainRef}
-        className="flex-1 overflow-x-auto overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 md:p-4 scroll-smooth touch-pan-x touch-pan-y overscroll-contain bg-gray-200 dark:bg-slate-950"
+        className="
+          flex-1 overflow-x-auto overflow-y-auto scroll-smooth touch-pan-x touch-pan-y overscroll-contain 
+          bg-gray-200 dark:bg-slate-950
+          px-1 py-1 sm:px-2 sm:py-2 md:p-4
+          pl-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))]
+          pb-[calc(env(safe-area-inset-bottom)+1.5rem)]
+        "
       >
         <BedLayoutContainer 
           beds={beds}
@@ -153,7 +163,7 @@ const App: React.FC = () => {
       </Suspense>
       
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
       )}
     </div>
   );

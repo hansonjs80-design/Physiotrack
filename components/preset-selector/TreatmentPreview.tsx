@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Play, ChevronUp, ChevronDown, Minus, Plus, PlusCircle, Trash2 } from 'lucide-react';
 import { Preset, TreatmentStep } from '../../types';
@@ -136,8 +135,17 @@ export const TreatmentPreview: React.FC<TreatmentPreviewProps> = ({ preset, setP
         </div>
       </div>
 
+      <button 
+        onClick={onConfirm}
+        disabled={preset.steps.length === 0}
+        className="w-full py-4 bg-brand-600 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-500/20 hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all mt-4 mb-2 disabled:opacity-50 disabled:pointer-events-none"
+      >
+        <Play className="w-6 h-6 fill-current" />
+        설정 확인 및 치료 시작
+      </button>
+
       {/* 추가 치료 선택 섹션 */}
-      <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
+      <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-slate-700">
         <p className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
           <PlusCircle className="w-3.5 h-3.5" />
           치료 추가 (Quick Add)
@@ -155,15 +163,6 @@ export const TreatmentPreview: React.FC<TreatmentPreviewProps> = ({ preset, setP
           ))}
         </div>
       </div>
-
-      <button 
-        onClick={onConfirm}
-        disabled={preset.steps.length === 0}
-        className="w-full py-4 bg-brand-600 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-500/20 hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all mt-6 disabled:opacity-50 disabled:pointer-events-none"
-      >
-        <Play className="w-6 h-6 fill-current" />
-        설정 확인 및 치료 시작
-      </button>
     </div>
   );
 };

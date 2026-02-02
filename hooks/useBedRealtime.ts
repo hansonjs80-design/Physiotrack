@@ -1,14 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { BedState, BedStatus } from '../types';
 import { supabase, isOnlineMode } from '../lib/supabase';
-import { TOTAL_BEDS } from '../constants';
 import { mapRowToBed, shouldIgnoreServerUpdate } from '../utils/bedUtils';
 
 export const useBedRealtime = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,
   setLocalBeds: (value: BedState[] | ((val: BedState[]) => BedState[])) => void
 ) => {
-  const [realtimeStatus, setRealtimeStatus] = useState<'OFFLINE' | 'CONNECTING' | 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'CLOSED'>('OFFLINE');
+  // Supabase의 subscribe 상태인 'TIMED_OUT'을 포함하도록 타입 확장
+  const [realtimeStatus, setRealtimeStatus] = useState<'OFFLINE' | 'CONNECTING' | 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'CLOSED' | 'TIMED_OUT'>('OFFLINE');
 
   useEffect(() => {
     if (!isOnlineMode() || !supabase) {
@@ -83,7 +84,10 @@ export const useBedRealtime = (
           return newBeds;
         });
       })
-      .subscribe((status) => setRealtimeStatus(status));
+      .subscribe((status) => {
+        // 타입 안전성을 위해 status를 직접 할당
+        setRealtimeStatus(status as any);
+      });
 
     return () => { supabase.removeChannel(channel); };
   }, [setBeds, setLocalBeds]);

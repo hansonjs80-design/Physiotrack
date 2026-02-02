@@ -1,5 +1,9 @@
 import { useEffect, useRef, RefObject } from 'react';
 
+// Define the breakpoint for switching between mobile (absolute/scroll-away) and desktop (relative/fixed)
+// 768 (md) includes Tablet Portrait in the "Desktop" behavior
+const DESKTOP_BREAKPOINT = 768; 
+
 export const useHeaderScroll = (
   scrollContainerRef: RefObject<HTMLElement | null>,
   headerRef: RefObject<HTMLElement | null>
@@ -19,9 +23,10 @@ export const useHeaderScroll = (
       if (!ticking.current) {
         window.requestAnimationFrame(() => {
           const currentScrollY = scrollContainer.scrollTop;
-          const isMobile = window.innerWidth < 1024; // Check layout breakpoint
+          const isMobile = window.innerWidth < DESKTOP_BREAKPOINT;
 
-          // On Desktop/Tablet landscape, always reset to visible
+          // On Desktop/Tablet (Portrait & Landscape), always reset to visible
+          // This ensures the header is sticky/relative and doesn't hide on scroll
           if (!isMobile) {
             header.style.transform = 'translate3d(0, 0, 0)';
             currentTranslateY.current = 0;
@@ -75,9 +80,9 @@ export const useHeaderScroll = (
       scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     }
 
-    // Handle Resize
+    // Handle Resize to reset transform when crossing the breakpoint
     const handleResize = () => {
-       if (window.innerWidth >= 1024 && headerRef.current) {
+       if (window.innerWidth >= DESKTOP_BREAKPOINT && headerRef.current) {
          headerRef.current.style.transform = 'translate3d(0, 0, 0)';
        }
     };

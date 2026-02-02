@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BedState, BedStatus } from '../types';
 import { supabase, isOnlineMode } from '../lib/supabase';
-import { mapRowToBed, shouldIgnoreServerUpdate } from '../utils/bedUtils';
+import { mapRowToBed, shouldIgnoreServerUpdate } from '../utils/bedLogic';
 
 export const useBedRealtime = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,

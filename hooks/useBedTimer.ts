@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { BedState, Preset } from '../types';
-import { calculateRemainingTime, playAlarmPattern } from '../utils/bedUtils';
+import { calculateRemainingTime } from '../utils/bedLogic';
+import { playAlarmPattern } from '../utils/alarm';
 
 export const useBedTimer = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,
@@ -27,7 +28,8 @@ export const useBedTimer = (
             if ((prevRemaining > 0 && newRemaining <= 0) || (prevRemaining === undefined && newRemaining === 0)) {
                // Only play if enabled
                if (isSoundEnabled) {
-                 playAlarmPattern();
+                 // Pass bed ID to trigger specific notification
+                 playAlarmPattern(bed.id);
                } else {
                  // Fallback: simple short vibration if sound disabled (haptic feedback only)
                  if (typeof navigator !== 'undefined' && navigator.vibrate) {

@@ -5,7 +5,7 @@ import { TOTAL_BEDS, STANDARD_TREATMENTS } from '../constants';
 import { supabase, isOnlineMode } from '../lib/supabase';
 import { useBedTimer } from './useBedTimer';
 import { useBedRealtime } from './useBedRealtime';
-import { mapBedToDbPayload, calculateRemainingTime } from '../utils/bedUtils';
+import { mapBedToDbPayload, calculateRemainingTime } from '../utils/bedLogic';
 
 interface SelectPresetOptions {
   isInjection?: boolean;

@@ -22,7 +22,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'connection' | 'presets'>('connection');
   
   return (
-    <div className={`fixed inset-y-0 left-0 w-full sm:w-96 bg-white dark:bg-slate-800 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <div className={`fixed inset-y-0 left-0 w-full sm:w-96 bg-white dark:bg-slate-800 shadow-2xl transform transition-transform duration-300 z-[60] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-brand-600 text-white shrink-0">

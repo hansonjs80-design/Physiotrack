@@ -57,9 +57,10 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
     setLocalBeds(prev => prev.map(b => b.id === bedId ? { ...b, ...updateWithTimestamp } : b));
 
     if (isOnlineMode() && supabase) {
-      const currentBed = bedsRef.current.find(b => b.id === bedId);
-      const fullUpdate = { ...currentBed, ...updates };
-      const dbPayload = mapBedToDbPayload(fullUpdate);
+      // Optimisation: Only map and send the fields that actually changed (updates).
+      // Sending the full merged object causes errors if the DB schema is outdated (e.g. missing is_fluid column)
+      // and we try to update unrelated fields.
+      const dbPayload = mapBedToDbPayload(updates);
       
       const { error } = await supabase.from('beds').update(dbPayload).eq('id', bedId);
       if (error) console.error(`[BedManager] DB Update Failed:`, error.message);

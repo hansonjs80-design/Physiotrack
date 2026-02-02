@@ -9,54 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        cleanupOutdatedCaches: true,
-        runtimeCaching: [
-          {
-            // Cache Tailwind CDN for offline usage
-            urlPattern: /^https:\/\/cdn\.tailwindcss\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tailwind-cdn-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-             // Cache External Icons (Flaticon)
-             urlPattern: /^https:\/\/cdn-icons-png\.flaticon\.com/,
-             handler: 'StaleWhileRevalidate',
-             options: {
-               cacheName: 'external-icons-cache',
-               expiration: {
-                 maxEntries: 50,
-                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-               },
-               cacheableResponse: {
-                 statuses: [0, 200]
-               }
-             }
-          },
-          {
-             // Cache Google Fonts
-             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-             handler: 'StaleWhileRevalidate',
-             options: {
-               cacheName: 'google-fonts-cache',
-               cacheableResponse: {
-                 statuses: [0, 200]
-               }
-             }
-          }
-        ]
-      },
       manifest: {
         name: 'PhysioTrack Pro',
         short_name: 'PhysioTrack',

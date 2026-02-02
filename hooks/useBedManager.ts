@@ -6,6 +6,12 @@ import { supabase, isOnlineMode } from '../lib/supabase';
 import { useBedTimer } from './useBedTimer';
 import { useBedRealtime } from './useBedRealtime';
 import { mapBedToDbPayload, calculateRemainingTime } from '../utils/bedLogic';
+import { 
+  createCustomPreset, 
+  createQuickStep, 
+  createSwappedPreset, 
+  createTractionPreset 
+} from '../utils/treatmentFactories';
 
 interface SelectPresetOptions {
   isInjection?: boolean;
@@ -57,11 +63,7 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
     setLocalBeds(prev => prev.map(b => b.id === bedId ? { ...b, ...updateWithTimestamp } : b));
 
     if (isOnlineMode() && supabase) {
-      // Optimisation: Only map and send the fields that actually changed (updates).
-      // Sending the full merged object causes errors if the DB schema is outdated (e.g. missing is_fluid column)
-      // and we try to update unrelated fields.
       const dbPayload = mapBedToDbPayload(updates);
-      
       const { error } = await supabase.from('beds').update(dbPayload).eq('id', bedId);
       if (error) console.error(`[BedManager] DB Update Failed:`, error.message);
     }
@@ -93,13 +95,9 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
 
   const startCustomPreset = useCallback((bedId: number, name: string, steps: TreatmentStep[], options?: SelectPresetOptions) => {
     if (steps.length === 0) return;
-    const firstStep = steps[0];
     
-    const customPreset: Preset = {
-      id: `custom-${Date.now()}`,
-      name: name,
-      steps: steps
-    };
+    const customPreset = createCustomPreset(name, steps);
+    const firstStep = steps[0];
 
     updateBedState(bedId, {
       status: BedStatus.ACTIVE,
@@ -121,16 +119,28 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
   }, [updateBedState]);
 
   const startQuickTreatment = useCallback((bedId: number, template: typeof STANDARD_TREATMENTS[0], options?: SelectPresetOptions) => {
-    const step: TreatmentStep = {
-      id: crypto.randomUUID(),
-      name: template.name,
-      duration: template.duration * 60,
-      enableTimer: template.enableTimer,
-      color: template.color
-    };
-
+    const step = createQuickStep(template.name, template.duration, template.enableTimer, template.color);
     startCustomPreset(bedId, template.name, [step], options);
   }, [startCustomPreset]);
+
+  const startTraction = useCallback((bedId: number, durationMinutes: number, options: any) => {
+    const tractionPreset = createTractionPreset(durationMinutes);
+    const firstStep = tractionPreset.steps[0];
+
+    updateBedState(bedId, {
+        status: BedStatus.ACTIVE,
+        currentPresetId: tractionPreset.id,
+        customPreset: tractionPreset,
+        currentStepIndex: 0,
+        queue: [],
+        startTime: Date.now(),
+        remainingTime: firstStep.duration,
+        originalDuration: firstStep.duration,
+        isPaused: false,
+        ...options,
+        memos: {}
+    });
+  }, [updateBedState]);
 
   const nextStep = useCallback((bedId: number) => {
     const bed = bedsRef.current.find(b => b.id === bedId);
@@ -181,20 +191,19 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
     const bed = bedsRef.current.find(b => b.id === bedId);
     if (!bed) return;
 
-    let steps = [...(bed.customPreset?.steps || presets.find(p => p.id === bed.currentPresetId)?.steps || [])];
-    if (steps.length === 0) return;
+    // Use factory to generate swapped preset structure
+    const swapResult = createSwappedPreset(
+      bed.customPreset, 
+      bed.currentPresetId, 
+      presets, 
+      idx1, 
+      idx2
+    );
 
-    // Perform swap
-    [steps[idx1], steps[idx2]] = [steps[idx2], steps[idx1]];
-
-    const newCustomPreset: Preset = {
-       id: bed.customPreset?.id || `custom-swap-${Date.now()}`,
-       name: bed.customPreset?.name || (presets.find(p => p.id === bed.currentPresetId)?.name || 'Custom'),
-       steps: steps
-    };
+    if (!swapResult) return;
 
     const updates: Partial<BedState> = {
-       customPreset: newCustomPreset,
+       customPreset: swapResult.preset,
        memos: {
          ...bed.memos,
          [idx1]: bed.memos[idx2],
@@ -202,8 +211,9 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
        }
     };
     
+    // If we swapped the *currently running* step, restart its timer logic
     if (bed.status === BedStatus.ACTIVE && (bed.currentStepIndex === idx1 || bed.currentStepIndex === idx2)) {
-       const currentStepItem = steps[bed.currentStepIndex];
+       const currentStepItem = swapResult.steps[bed.currentStepIndex];
        updates.remainingTime = currentStepItem.duration;
        updates.originalDuration = currentStepItem.duration;
        updates.startTime = Date.now();
@@ -262,33 +272,12 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
     selectPreset, 
     startCustomPreset, 
     startQuickTreatment,
-    startTraction: (bedId: number, duration: number, options: any) => {
-        const tractionPreset: Preset = {
-            id: `traction-${Date.now()}`,
-            name: '견인 치료',
-            steps: [{ id: 'tr', name: '견인 (Traction)', duration: duration * 60, enableTimer: true, color: 'bg-orange-500' }]
-        };
-        updateBedState(bedId, {
-            status: BedStatus.ACTIVE,
-            currentPresetId: tractionPreset.id,
-            customPreset: tractionPreset,
-            currentStepIndex: 0,
-            queue: [],
-            startTime: Date.now(),
-            remainingTime: duration * 60,
-            originalDuration: duration * 60,
-            isPaused: false,
-            ...options,
-            memos: {}
-        });
-    },
+    startTraction,
     nextStep,
     prevStep,
     swapSteps, 
     togglePause,
-    jumpToStep: (bedId: number, stepIndex: number) => {
-       // Deprecated but kept for type signature compatibility if needed
-    },
+    jumpToStep: (bedId: number, stepIndex: number) => {},
     toggleInjection: (id: number) => toggleFlag(id, 'isInjection'),
     toggleFluid: (id: number) => toggleFlag(id, 'isFluid'),
     toggleTraction: (id: number) => toggleFlag(id, 'isTraction'),

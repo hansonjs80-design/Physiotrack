@@ -4,6 +4,7 @@ import { usePresetManager } from '../hooks/usePresetManager';
 import { useBedManager } from '../hooks/useBedManager';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STANDARD_TREATMENTS } from '../constants';
+import { useNotificationBridge } from '../hooks/useNotificationBridge';
 
 interface TreatmentContextType {
   beds: BedState[];
@@ -57,6 +58,9 @@ export const TreatmentProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [editingBedId, setEditingBedId] = useState<number | null>(null);
 
   const toggleSound = () => setIsSoundEnabled(prev => !prev);
+
+  // Hook up Service Worker notifications to the manager's nextStep function
+  useNotificationBridge(bedManager.nextStep);
 
   const value = {
     presets,

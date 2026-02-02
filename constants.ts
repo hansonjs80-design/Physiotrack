@@ -1,6 +1,5 @@
 import { Preset, TreatmentStep } from './types';
 
-// Helper to create steps easily
 const createStep = (name: string, minutes: number, enableTimer: boolean, color: string): TreatmentStep => ({
   id: crypto.randomUUID(),
   name,
@@ -53,7 +52,7 @@ export const DEFAULT_PRESETS: Preset[] = [
 export const TOTAL_BEDS = 11;
 
 export const SUPABASE_INIT_SQL = `
--- [PhysioTrack DB Setup Script v17 - Added Manual Therapy Flag]
+-- [PhysioTrack DB Setup Script v20]
 -- 1. Create tables
 create table if not exists public.beds (
   id bigint primary key,
@@ -73,6 +72,17 @@ create table if not exists public.beds (
   updated_at timestamptz default now()
 );
 
+-- Ensure all flags exist (Fixes 'column not found' errors)
+do $$ 
+begin 
+  if not exists (select 1 from information_schema.columns where table_name = 'beds' and column_name = 'is_manual') then
+    alter table public.beds add column is_manual boolean not null default false;
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'beds' and column_name = 'is_eswt') then
+    alter table public.beds add column is_eswt boolean not null default false;
+  end if;
+end $$;
+
 create table if not exists public.presets (
   id text primary key,
   name text not null,
@@ -82,27 +92,17 @@ create table if not exists public.presets (
   updated_at timestamptz default now()
 );
 
--- 2. Security Configuration & Permissions (CRITICAL FOR DELETE)
+-- 2. RLS & Permissions
 alter table public.beds enable row level security;
 alter table public.presets enable row level security;
-
--- Drop existing policies to ensure clean state
 drop policy if exists "Allow Public Access" on public.beds;
 drop policy if exists "Allow Public Access Presets" on public.presets;
-drop policy if exists "Enable all access for all users" on public.presets;
-
--- Create Permissive Policies (Allow SELECT, INSERT, UPDATE, DELETE)
 create policy "Allow Public Access" on public.beds for all using (true) with check (true);
 create policy "Allow Public Access Presets" on public.presets for all using (true) with check (true);
-
--- Explicit Grants (Fixes 'Delete not working' issues by granting strict permissions)
 grant all on table public.beds to anon, authenticated, service_role;
 grant all on table public.presets to anon, authenticated, service_role;
--- Redundant explicit delete grant for safety
-grant delete on table public.presets to anon, authenticated, service_role;
 
 -- 3. Initial Data
--- Beds
 insert into public.beds (id, status, queue, memos) 
 select i, 'IDLE', '[]'::jsonb, '{}'::jsonb
 from generate_series(1, 11) as i
@@ -110,23 +110,7 @@ on conflict (id) do update set
   queue = coalesce(beds.queue, '[]'::jsonb),
   memos = coalesce(beds.memos, '{}'::jsonb);
 
--- Presets (Insert defaults only if table is empty to prevent overwriting user changes)
-insert into public.presets (id, name, steps, rank)
-select 'preset-basic', '기본 (Basic)', 
-'[{"id": "step-hp-basic", "name": "핫팩 (Hot Pack)", "color": "bg-red-500", "duration": 600, "enableTimer": true}, {"id": "step-ict-basic", "name": "ICT", "color": "bg-blue-500", "duration": 600, "enableTimer": false}, {"id": "step-mg-basic", "name": "자기장 (Magnetic)", "color": "bg-purple-500", "duration": 600, "enableTimer": false}]'::jsonb, 0
-where not exists (select 1 from public.presets);
-
-insert into public.presets (id, name, steps, rank)
-select 'preset-neck', '목 치료 (Neck)', 
-'[{"id": "step-hp-neck", "name": "핫팩 (Hot Pack)", "color": "bg-red-500", "duration": 600, "enableTimer": true}, {"id": "step-tr-neck", "name": "견인 (Traction)", "color": "bg-orange-500", "duration": 900, "enableTimer": true}, {"id": "step-ict-neck", "name": "ICT", "color": "bg-blue-500", "duration": 600, "enableTimer": false}]'::jsonb, 1
-where not exists (select 1 from public.presets where id = 'preset-neck');
-
-insert into public.presets (id, name, steps, rank)
-select 'preset-simple', '단순 물리치료', 
-'[{"id": "step-ir-simple", "name": "적외선 (IR)", "color": "bg-red-600", "duration": 900, "enableTimer": true}, {"id": "step-tens-simple", "name": "TENS", "color": "bg-indigo-500", "duration": 900, "enableTimer": false}]'::jsonb, 2
-where not exists (select 1 from public.presets where id = 'preset-simple');
-
--- 4. Realtime Triggers
+-- 4. Realtime Trigger
 create or replace function public.handle_updated_at() 
 returns trigger as $$
 begin
@@ -139,18 +123,11 @@ drop trigger if exists on_beds_updated on public.beds;
 create trigger on_beds_updated before update on public.beds
 for each row execute procedure public.handle_updated_at();
 
-drop trigger if exists on_presets_updated on public.presets;
-create trigger on_presets_updated before update on public.presets
-for each row execute procedure public.handle_updated_at();
-
 -- Ensure realtime is active
 do $$
 begin
   if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'beds') then
     alter publication supabase_realtime add table public.beds;
-  end if;
-  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'presets') then
-    alter publication supabase_realtime add table public.presets;
   end if;
 end $$;
 `.trim();

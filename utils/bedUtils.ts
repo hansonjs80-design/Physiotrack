@@ -1,3 +1,4 @@
+
 import { BedState, BedStatus, TreatmentStep, Preset } from '../types';
 
 // --- Formatters ---
@@ -65,84 +66,104 @@ export const getStepColor = (
 };
 
 export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => {
-  let base = "relative flex flex-col h-full rounded-lg shadow-md border overflow-hidden select-none transition-all duration-300 ";
-  
-  // Height classes: 
-  // - Mobile portrait: 160px -> 144px (10% reduced)
-  // - Tablet/Desktop Portrait: 200px
-  // - Mobile landscape: 110px
-  // - Tablet/Desktop Landscape (lg): 240px
+  // 기본 테두리를 검정색(border-black)으로 설정하고 두께를 border-[1.5px]로 조정 (기존 border-2에서 감소)
+  let base = "relative flex flex-col h-full rounded-lg shadow-md border-[1.5px] border-black dark:border-slate-200 overflow-hidden select-none transition-all duration-300 ";
   const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[110px] sm:landscape:min-h-[110px] lg:landscape:min-h-[240px] ";
+
+  // Bed T (ID: 11) 만의 고유 테마 설정
+  const isBedT = bed.id === 11;
 
   let statusClasses = "";
   if (bed.status === BedStatus.COMPLETED) {
-     statusClasses = "bg-gray-300 dark:bg-slate-700 border-gray-400 dark:border-slate-600 grayscale-[0.2]";
+     statusClasses = "bg-gray-300 dark:bg-slate-700 grayscale-[0.2]";
   } else if (isOvertime) {
-     // Overtime: Red border + Ring (Outside)
-     statusClasses = "bg-white dark:bg-slate-800 border-red-500 dark:border-red-500 border ring-2 ring-red-500 dark:ring-red-500 animate-pulse ";
+     // 초과 상태일 때만 테두리를 빨간색으로 변경하여 시각적 경고 제공
+     statusClasses = "bg-white dark:bg-slate-800 border-red-500 dark:border-red-500 ring-2 ring-red-500 dark:ring-red-500 animate-pulse ";
   } else {
-     statusClasses = "bg-white dark:bg-slate-800 ";
-     if (bed.isInjection) statusClasses += 'border-red-400 dark:border-red-500 ring-2 ring-red-100 dark:ring-red-900/20';
-     else if (bed.isESWT) statusClasses += 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/20';
-     else if (bed.isManual) statusClasses += 'border-violet-400 dark:border-violet-500 ring-2 ring-violet-100 dark:ring-violet-900/20';
-     else if (bed.isTraction) statusClasses += 'border-orange-400 dark:border-orange-500 ring-2 ring-orange-100 dark:ring-orange-900/20';
-     else statusClasses += 'border-slate-400 dark:border-slate-500';
+     // Bed T는 기본 배경색을 amber 톤으로 설정하되 테두리는 검정색 유지
+     if (isBedT) {
+        statusClasses = "bg-amber-50/40 dark:bg-amber-900/10 ring-1 ring-amber-200/50 dark:ring-amber-900/30 ";
+     } else {
+        statusClasses = "bg-white dark:bg-slate-800 ";
+     }
+     
+     // 상태 뱃지/플래그에 따른 추가 강조 (테두리 색상은 검정 유지하며 링 효과로 구분)
+     if (bed.isInjection) statusClasses += 'ring-2 ring-red-100 dark:ring-red-900/20';
+     else if (bed.isESWT) statusClasses += 'ring-2 ring-blue-100 dark:ring-blue-900/20';
+     else if (bed.isManual) statusClasses += 'ring-2 ring-violet-100 dark:ring-violet-900/20';
+     else if (bed.isTraction && !isBedT) statusClasses += 'ring-2 ring-orange-100 dark:ring-orange-900/20';
   }
 
   return base + heightClasses + statusClasses;
 };
 
-// --- Data Mapping (DB to Client) ---
+// --- Data Mapping & Logic ---
 
-export const mapRowToBed = (row: any): BedState => {
-  // Zombie Guard: 
-  // If a bed is marked ACTIVE but the start time is older than 12 hours, 
-  // it is likely a 'zombie' state that wasn't cleared properly. Force it to IDLE.
-  const MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours
-  let status = row.status as BedStatus;
+// DB Row -> Partial BedState
+export const mapRowToBed = (row: any): Partial<BedState> => {
+  const MAX_AGE_MS = 12 * 60 * 60 * 1000;
+  let status = row.status as BedStatus | undefined;
   let startTime = row.start_time;
 
   if (status === BedStatus.ACTIVE && startTime && (Date.now() - startTime > MAX_AGE_MS)) {
-    console.warn(`[BedUtils] Detected zombie state for Bed ${row.id}. Force clearing.`);
     status = BedStatus.IDLE;
     startTime = null;
   }
 
-  return {
-    id: row.id,
-    status: status,
-    currentPresetId: row.current_preset_id,
-    customPreset: row.custom_preset_json,
-    currentStepIndex: row.current_step_index,
-    queue: row.queue || [],
-    remainingTime: 0, // Calculated by Timer Hook
-    startTime: startTime,
-    isPaused: row.is_paused,
-    originalDuration: row.original_duration,
-    isInjection: row.is_injection || false,
-    isTraction: row.is_traction || false,
-    isESWT: row.is_eswt || false,
-    isManual: row.is_manual || false,
-    memos: row.memos || {}
-  };
+  const result: any = { id: row.id };
+  if (status !== undefined) result.status = status;
+  if (row.current_preset_id !== undefined) result.currentPresetId = row.current_preset_id;
+  if (row.custom_preset_json !== undefined) result.customPreset = row.custom_preset_json;
+  if (row.current_step_index !== undefined) result.currentStepIndex = row.current_step_index;
+  if (row.queue !== undefined) result.queue = row.queue || [];
+  if (startTime !== undefined) result.startTime = startTime;
+  if (row.is_paused !== undefined) result.isPaused = row.is_paused;
+  if (row.original_duration !== undefined) result.originalDuration = row.original_duration;
+  if (row.is_injection !== undefined) result.isInjection = !!row.is_injection;
+  if (row.is_traction !== undefined) result.isTraction = !!row.is_traction;
+  if (row.is_eswt !== undefined) result.isESWT = !!row.is_eswt;
+  if (row.is_manual !== undefined) result.isManual = !!row.is_manual;
+  if (row.memos !== undefined) result.memos = row.memos || {};
+  if (row.updated_at !== undefined) result.updatedAt = row.updated_at;
+
+  return result;
 };
 
-// --- Logic Helpers ---
+// Partial BedState -> Partial DB Row
+export const mapBedToDbPayload = (updates: Partial<BedState>): any => {
+  const payload: any = {};
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.currentPresetId !== undefined) payload.current_preset_id = updates.currentPresetId;
+  if (updates.currentStepIndex !== undefined) payload.current_step_index = updates.currentStepIndex;
+  if (updates.queue !== undefined) payload.queue = updates.queue;
+  if (updates.startTime !== undefined) payload.start_time = updates.startTime;
+  if (updates.isPaused !== undefined) payload.is_paused = updates.isPaused;
+  if (updates.isInjection !== undefined) payload.is_injection = updates.isInjection;
+  if (updates.isTraction !== undefined) payload.is_traction = updates.isTraction;
+  if (updates.isESWT !== undefined) payload.is_eswt = updates.isESWT;
+  if (updates.isManual !== undefined) payload.is_manual = updates.isManual;
+  if (updates.memos !== undefined) payload.memos = updates.memos;
+  if (updates.customPreset !== undefined) payload.custom_preset_json = updates.customPreset;
+  if (updates.originalDuration !== undefined) payload.original_duration = updates.originalDuration;
+
+  payload.updated_at = new Date().toISOString();
+  return payload;
+};
+
+export const shouldIgnoreServerUpdate = (localBed: BedState, serverBed: Partial<BedState>): boolean => {
+  if (!localBed.lastUpdateTimestamp) return false;
+  const serverUpdateTime = serverBed.updatedAt ? new Date(serverBed.updatedAt).getTime() : 0;
+  return localBed.lastUpdateTimestamp > serverUpdateTime;
+};
 
 export const calculateRemainingTime = (bed: BedState, presets: Preset[]): number => {
-  if (bed.status !== BedStatus.ACTIVE || !bed.startTime || bed.isPaused) {
-    return bed.remainingTime; // Keep existing if not running
-  }
-
+  if (bed.status !== BedStatus.ACTIVE || !bed.startTime || bed.isPaused) return bed.remainingTime;
   const preset = bed.customPreset || presets.find(p => p.id === bed.currentPresetId);
   const step = preset?.steps[bed.currentStepIndex];
-
   if (step?.enableTimer) {
     const duration = bed.originalDuration || step.duration;
     const elapsed = Math.floor((Date.now() - bed.startTime) / 1000);
-    // Return signed integer: positive = remaining, negative = overtime
     return duration - elapsed;
   }
-  
   return 0;
 };

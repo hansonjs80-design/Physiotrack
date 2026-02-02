@@ -1,3 +1,4 @@
+
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import { BedState, BedStatus, Preset, TreatmentStep } from '../types';
 import { BedHeader } from './BedHeader';
@@ -13,24 +14,22 @@ interface BedCardProps {
   onOpenSelector: (bedId: number) => void;
   onEdit: (bedId: number) => void;
   onNextStep: (bedId: number) => void;
+  onTogglePause: (bedId: number) => void;
   onJumpToStep?: (bedId: number, stepIndex: number) => void;
   onClear: (bedId: number) => void;
-  onToggleInjection?: (bedId: number) => void;
-  onToggleTraction?: (bedId: number) => void;
-  onToggleESWT?: (bedId: number) => void;
-  onToggleManual?: (bedId: number) => void;
-  onUpdateSteps?: (bedId: number, steps: TreatmentStep[]) => void;
   onUpdateMemo?: (bedId: number, stepIndex: number, memo: string | null) => void;
   onUpdateDuration?: (bedId: number, duration: number) => void;
   isCompact: boolean;
 }
 
+// 성능 최적화: 타이머 업데이트 시 해당 BedCard만 갱신되도록 memo 적용
 export const BedCard: React.FC<BedCardProps> = memo(({ 
   bed, 
   presets, 
   onOpenSelector, 
   onEdit, 
   onNextStep, 
+  onTogglePause,
   onJumpToStep, 
   onClear,
   onUpdateMemo,
@@ -58,34 +57,36 @@ export const BedCard: React.FC<BedCardProps> = memo(({
       setTimeout(() => setTrashState(prev => prev === 'confirm' ? 'idle' : prev), 3000);
     } else if (trashState === 'confirm') {
       setTrashState('deleting');
-      setTimeout(() => onClear(bed.id), 500); 
+      requestAnimationFrame(() => {
+        onClear(bed.id);
+      });
     }
   };
 
-  const containerClass = useMemo(() => getBedCardStyles(bed, isOvertime), [bed.status, bed.isInjection, bed.isESWT, bed.isTraction, bed.isManual, isOvertime]);
+  const containerClass = useMemo(() => getBedCardStyles(bed, isOvertime), [
+    bed.status, bed.isInjection, bed.isESWT, bed.isTraction, bed.isManual, isOvertime
+  ]);
 
   return (
-    <div className={containerClass}>
+    <div className={`${containerClass} transform transition-transform duration-200 active:scale-[0.99]`}>
       <BedHeader 
         bed={bed} 
         currentStep={currentStep} 
         onTrashClick={handleTrashClick} 
         trashState={trashState}
         onEditClick={onEdit}
+        onTogglePause={onTogglePause}
         onUpdateDuration={onUpdateDuration}
       />
 
-      <div className="flex-1 flex flex-col w-full min-h-0 relative">
+      <div className="flex-1 flex flex-col w-full min-h-0 relative bg-white/40 dark:bg-slate-800/20 backdrop-blur-xs">
         <div className="flex-1 flex flex-row w-full min-h-0">
           {bed.status === BedStatus.IDLE ? (
             <BedEmptyState onOpenSelector={() => onOpenSelector(bed.id)} />
           ) : (
             <div 
               className="w-full h-full min-h-0"
-              onDoubleClick={(e) => {
-                // Trigger edit on double click for active beds
-                onEdit(bed.id);
-              }}
+              onDoubleClick={(e) => onEdit(bed.id)}
             >
               <BedContent 
                 steps={steps}
@@ -98,7 +99,6 @@ export const BedCard: React.FC<BedCardProps> = memo(({
           )}
         </div>
 
-        {/* Status Indicators */}
         <BedStatusBadges bed={bed} />
       </div>
 
@@ -112,5 +112,18 @@ export const BedCard: React.FC<BedCardProps> = memo(({
         />
       )}
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // 타이머나 침상 상태가 바뀔 때만 리렌더링
+  return (
+    prevProps.bed.remainingTime === nextProps.bed.remainingTime &&
+    prevProps.bed.status === nextProps.bed.status &&
+    prevProps.bed.currentStepIndex === nextProps.bed.currentStepIndex &&
+    prevProps.bed.isPaused === nextProps.bed.isPaused &&
+    prevProps.bed.isInjection === nextProps.bed.isInjection &&
+    prevProps.bed.isManual === nextProps.bed.isManual &&
+    prevProps.bed.isESWT === nextProps.bed.isESWT &&
+    prevProps.bed.isTraction === nextProps.bed.isTraction &&
+    prevProps.isCompact === nextProps.isCompact
   );
 });

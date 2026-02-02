@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -5,57 +6,56 @@
     <link rel="icon" type="image/svg+xml" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
-    <!-- PWA Standalone Mode Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="PhysioTrack" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0f172a" />
     
-    <!-- App Icons (Placeholders) -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063176.png" />
     
     <title>PhysioTrack Pro</title>
     <style>
-      /* Custom Scrollbar Styling - 최적화된 디자인 */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .dark ::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.1);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #d1d5db; /* light: gray-300 */
-        border-radius: 10px;
-        border: 2px solid transparent;
-        background-clip: padding-box;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background-color: #9ca3af; /* light: gray-400 */
-      }
-      .dark ::-webkit-scrollbar-thumb {
-        background-color: #334155; /* dark: slate-700 */
-      }
-      .dark ::-webkit-scrollbar-thumb:hover {
-        background-color: #475569; /* dark: slate-600 */
-      }
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .dark ::-webkit-scrollbar-thumb { background: #334155; }
       
-      /* Smooth scrolling for the whole app */
-      html {
-        scroll-behavior: smooth;
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f1f5f9;
+      }
+      .dark html, .dark body { background-color: #020617; }
+      
+      body {
+        overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        user-select: none;
+        /* iOS Safe Area 대응 */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
       }
       
-      /* Prevent text selection on buttons for better app feel */
-      button {
-        user-select: none;
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      input[type=number] { -moz-appearance: textfield; }
+      
+      button:active { transform: scale(0.96); opacity: 0.8; }
+      
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+      }
+      .dark .custom-scrollbar {
+        scrollbar-color: #334155 transparent;
       }
     </style>
-    <!-- Tailwind CSS CDN (Cached via Service Worker in vite.config.ts) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -63,37 +63,42 @@
         theme: {
           extend: {
             colors: {
-              brand: {
-                50: '#f0f9ff',
-                100: '#e0f2fe',
-                500: '#0ea5e9',
-                600: '#0284c7',
-                900: '#0c4a6e',
+              brand: { 
+                50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 
+                500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' 
               }
             },
-            animation: {
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            backdropBlur: {
+              xs: '2px',
+            },
+            screens: {
+              'xs': '375px',
+              'sm': '640px',
+              'md': '768px',
+              'lg': '1024px',
+              'xl': '1280px',
+              '2xl': '1536px',
             }
           }
         }
       }
     </script>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "vite": "https://esm.sh/vite@^7.3.1",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.3"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.93.3",
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0"
   }
 }
 </script>
-</head>
-  <body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 overflow-hidden antialiased">
+  </head>
+  <body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-brand-100 dark:selection:bg-brand-900/30">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

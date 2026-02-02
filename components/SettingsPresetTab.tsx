@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Preset } from '../types';
 import { PresetList } from './settings/PresetList';
@@ -41,6 +42,7 @@ export const SettingsPresetTab: React.FC<SettingsPresetTabProps> = ({ presets, o
           onEdit={setEditingPreset}
           onDelete={handleDeletePreset}
           onCreate={() => setEditingPreset({ id: crypto.randomUUID(), name: '새 처방', steps: [] })}
+          onUpdatePresets={onUpdatePresets}
         />
       )}
     </>

@@ -34,7 +34,7 @@ export const BedEditOverlay: React.FC<BedEditOverlayProps> = ({
       onClick={onClose}
     >
       <div 
-        className="w-full sm:max-w-lg bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] border border-gray-200 dark:border-slate-700"
+        className="w-full sm:max-w-lg bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[85vh] border border-gray-200 dark:border-slate-700"
         onClick={e => e.stopPropagation()}
       >
         <BedEditHeader bedId={bed.id} onClose={onClose} />
@@ -58,7 +58,7 @@ export const BedEditOverlay: React.FC<BedEditOverlayProps> = ({
              />
            </div>
 
-           <div className="shrink-0">
+           <div className="shrink-0 pb-6">
              <BedEditQuickAdd 
                bedId={bed.id} 
                steps={steps} 
@@ -67,8 +67,8 @@ export const BedEditOverlay: React.FC<BedEditOverlayProps> = ({
            </div>
         </div>
         
-        <div className="p-4 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 shrink-0 pb-safe">
-           <button onClick={onClose} className="w-full py-3 bg-gray-900 dark:bg-slate-700 text-white text-sm rounded-xl font-bold shadow-lg shadow-gray-200 dark:shadow-none active:scale-[0.98] transition-transform hover:bg-gray-800 dark:hover:bg-slate-600">
+        <div className="p-4 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 shrink-0 pb-6 sm:pb-4">
+           <button onClick={onClose} className="w-full py-3.5 bg-gray-900 dark:bg-slate-700 text-white text-sm rounded-xl font-bold shadow-lg shadow-gray-200 dark:shadow-none active:scale-[0.98] transition-transform hover:bg-gray-800 dark:hover:bg-slate-600">
              완료 및 닫기
            </button>
         </div>

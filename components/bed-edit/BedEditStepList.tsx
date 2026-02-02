@@ -62,8 +62,10 @@ export const BedEditStepList: React.FC<BedEditStepListProps> = ({
       
       <div className="space-y-2">
         {steps.length === 0 && (
-          <div className="text-center py-4 text-gray-400 text-sm italic bg-gray-50 dark:bg-slate-900 rounded-lg border border-dashed border-gray-200 dark:border-slate-700">
+          <div className="text-center py-6 text-gray-400 text-sm italic bg-gray-50 dark:bg-slate-900 rounded-lg border border-dashed border-gray-200 dark:border-slate-700">
             등록된 치료가 없습니다.
+            <br/>
+            <span className="text-xs opacity-70">아래에서 처방을 추가해주세요.</span>
           </div>
         )}
         {steps.map((step, idx) => (

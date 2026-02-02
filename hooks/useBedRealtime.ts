@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BedState, BedStatus } from '../types';
 import { supabase, isOnlineMode } from '../lib/supabase';
 import { TOTAL_BEDS } from '../constants';
-import { mapRowToBed } from '../utils/bedUtils';
+import { mapRowToBed, shouldIgnoreServerUpdate } from '../utils/bedUtils';
 
 export const useBedRealtime = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,
@@ -19,95 +19,73 @@ export const useBedRealtime = (
     setRealtimeStatus('CONNECTING');
 
     const fetchBeds = async () => {
-      const { data, error } = await supabase
-        .from('beds')
-        .select('*')
-        .order('id');
-
+      const { data, error } = await supabase.from('beds').select('*').order('id');
       if (!error && data) {
-        const mappedBeds: BedState[] = data.map(mapRowToBed);
-
-        // Initialize if empty
-        if (mappedBeds.length === 0) {
-          const initialBeds = Array.from({ length: TOTAL_BEDS }, (_, i) => ({
-            id: i + 1,
-            status: BedStatus.IDLE,
-            current_step_index: 0,
-            queue: [],
-            is_paused: false,
-            is_injection: false,
-            is_traction: false,
-            is_eswt: false
-          }));
-          await supabase.from('beds').insert(initialBeds);
-        } else {
-          setBeds((currentBeds) => {
-             // Merge strategy: If local bed has a recent pending update (timestamp), prefer local.
-             // Otherwise, take server.
-             return mappedBeds.map(serverBed => {
-                const localBed = currentBeds.find(b => b.id === serverBed.id);
-                // If local bed was updated < 5 seconds ago, assume it's newer/pending than the fetch result
-                if (localBed?.lastUpdateTimestamp && Date.now() - localBed.lastUpdateTimestamp < 5000) {
-                   return localBed;
-                }
-                return serverBed;
-             });
+        const serverBeds: BedState[] = data.map(row => mapRowToBed(row) as BedState);
+        setBeds((currentBeds) => {
+          return serverBeds.map(serverBed => {
+            const localBed = currentBeds.find(b => b.id === serverBed.id);
+            if (localBed && shouldIgnoreServerUpdate(localBed, serverBed)) return localBed;
+            return serverBed;
           });
-          // Note: We don't blindly call setLocalBeds(mappedBeds) here to avoid reverting local storage 
-          // if we just made a change. We let the setBeds flow update it via useBedManager's effect.
-        }
+        });
       }
     };
 
     fetchBeds();
 
-    // Subscribe to Realtime Changes
     const channel = supabase
       .channel('public:beds')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'beds' }, (payload) => {
-        const newRow = payload.new as any;
+        const updatedBedFields = mapRowToBed(payload.new);
         
         setBeds((prev) => {
-          const updatedBeds = prev.map((bed) => {
-            if (bed.id === newRow.id) {
-              // --- STALE UPDATE PREVENTION ---
-              // If we updated this bed locally within the last 5 seconds (e.g. Cleared it),
-              // ignore this incoming event as it is likely an "echo" of the old state 
-              // or the server acknowledging a previous state before processing the clear.
-              // Increased from 2000ms to 5000ms to handle slower network/database roundtrips.
-              if (bed.lastUpdateTimestamp && Date.now() - bed.lastUpdateTimestamp < 5000) {
-                 // console.log(`Ignoring stale update for Bed ${bed.id}`);
-                 return bed;
+          const newBeds = prev.map((bed) => {
+            if (bed.id === updatedBedFields.id) {
+              // 1. 타임스탬프 기반 최신 데이터 확인
+              if (shouldIgnoreServerUpdate(bed, updatedBedFields)) return bed;
+              
+              // 2. 좀비 방지: 로컬에서 방금 비웠는데 서버가 Active로 오면 무시
+              if (bed.status === BedStatus.IDLE && updatedBedFields.status === BedStatus.ACTIVE) {
+                 const timeSinceClear = Date.now() - (bed.lastUpdateTimestamp || 0);
+                 if (timeSinceClear < 10000) return bed; 
               }
 
-              // Merge realtime data with current state, preserving remainingTime handled by interval
-              const updated = mapRowToBed(newRow);
-              return {
-                ...updated,
-                remainingTime: bed.remainingTime, // Keep local countdown continuity
-              };
+              // 3. 처방 데이터 증발 방지 (Smart Merge)
+              // 상태 표시 버튼 클릭 시 서버에서 처방 데이터가 누락되어 오는 경우 기존 데이터 유지
+              const mergedBed = { ...bed, ...updatedBedFields };
+              
+              const isTargetActive = mergedBed.status !== BedStatus.IDLE;
+              const hasLocalPrescription = !!bed.customPreset || !!bed.currentPresetId;
+              const serverHasNoPrescription = !mergedBed.customPreset && !mergedBed.currentPresetId;
+
+              if (isTargetActive && hasLocalPrescription && serverHasNoPrescription) {
+                mergedBed.customPreset = bed.customPreset;
+                mergedBed.currentPresetId = bed.currentPresetId;
+                mergedBed.queue = bed.queue;
+                mergedBed.remainingTime = bed.remainingTime;
+              }
+
+              // IDLE인 경우 확실히 초기화
+              if (mergedBed.status === BedStatus.IDLE) {
+                mergedBed.remainingTime = 0;
+                mergedBed.customPreset = undefined;
+                mergedBed.currentPresetId = null;
+                mergedBed.queue = [];
+              }
+
+              return mergedBed;
             }
             return bed;
           });
           
-          // Sync to local storage as well so we don't lose server updates on reload
-          setLocalBeds(updatedBeds);
-          return updatedBeds;
+          setLocalBeds(newBeds);
+          return newBeds;
         });
       })
-      .subscribe((status) => {
-        setRealtimeStatus(status);
-        if (status === 'SUBSCRIBED') {
-          // Do NOT fetchBeds() here again blindly if we already have state.
-          // Or if we do, we risk overwriting recent optimistic updates.
-          // But we need to fetch initial state.
-          // The fetchBeds above is async and independent. 
-        }
-      });
+      .subscribe((status) => setRealtimeStatus(status));
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [setBeds, setLocalBeds]);
 
   return { realtimeStatus };

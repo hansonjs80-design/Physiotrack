@@ -1,95 +1,57 @@
-import React, { useMemo, memo } from 'react';
-import { BedState, Preset, TreatmentStep } from '../types';
+
+import React, { memo, useCallback, useMemo } from 'react';
+import { BedLayoutProps, BedState } from '../types';
 import { PORTRAIT_PAIRS_CONFIG } from '../constants/layout';
 import { BedBay } from './BedBay';
 
-interface PortraitLayoutProps {
-  beds: BedState[];
-  presets: Preset[];
-  onOpenSelector: (bedId: number) => void;
-  onEdit: (bedId: number) => void;
-  onNext: (bedId: number) => void;
-  onJumpToStep: (bedId: number, stepIndex: number) => void;
-  onClear: (bedId: number) => void;
-  onToggleInjection: (bedId: number) => void;
-  onToggleTraction: (bedId: number) => void;
-  onToggleESWT: (bedId: number) => void;
-  onToggleManual: (bedId: number) => void;
-  onUpdateSteps: (bedId: number, steps: TreatmentStep[]) => void;
-  onUpdateMemo: (bedId: number, stepIndex: number, memo: string | null) => void;
-  onUpdateDuration: (bedId: number, duration: number) => void;
-}
-
-export const PortraitLayout: React.FC<PortraitLayoutProps> = memo(({
-  beds,
-  presets,
-  onOpenSelector,
-  onEdit,
-  onNext,
-  onJumpToStep,
-  onClear,
-  onToggleInjection,
-  onToggleTraction,
-  onToggleESWT,
-  onToggleManual,
-  onUpdateSteps,
-  onUpdateMemo,
-  onUpdateDuration
-}) => {
+export const PortraitLayout: React.FC<BedLayoutProps> = memo((props) => {
+  const { beds } = props;
   
-  const portraitRows = useMemo(() => {
-    const bedMap = new Map(beds.map(b => [b.id, b]));
-    const get = (id: number | null) => (id !== null ? bedMap.get(id) : undefined) || beds[0];
-
-    return PORTRAIT_PAIRS_CONFIG.map(pair => ({
-      left: [get(pair.left)],
-      right: pair.right !== null ? [get(pair.right)] : []
-    }));
+  const getBed = useCallback((id: number): BedState => {
+    return beds.find(b => b.id === id) || beds[0];
   }, [beds]);
 
+  // 2개 행씩 묶음 처리 (1-11/2-null 묶음, 3-10/4-9 묶음, 5-8/6-7 묶음)
+  // 이를 통해 1번과 2번 사이의 간격을 좁히고, 묶음 간의 간격을 조절합니다.
+  const groupedPairs = useMemo(() => {
+    const groups = [];
+    for (let i = 0; i < PORTRAIT_PAIRS_CONFIG.length; i += 2) {
+      groups.push(PORTRAIT_PAIRS_CONFIG.slice(i, i + 2));
+    }
+    return groups;
+  }, []);
+
   return (
-    <div className="flex flex-col gap-2 sm:gap-[25px] pb-10 landscape:hidden">
-      {portraitRows.map((row, idx) => (
-        <div key={idx} className="flex flex-row gap-1 sm:gap-6">
-          <div className="flex-1 w-0">
-            <BedBay 
-              beds={row.left}
-              presets={presets}
-              onOpenSelector={onOpenSelector}
-              onEdit={onEdit}
-              onNext={onNext}
-              onJumpToStep={onJumpToStep}
-              onClear={onClear}
-              side="left"
-              onToggleInjection={onToggleInjection}
-              onToggleTraction={onToggleTraction}
-              onToggleESWT={onToggleESWT}
-              onToggleManual={onToggleManual}
-              onUpdateSteps={onUpdateSteps}
-              onUpdateMemo={onUpdateMemo}
-              onUpdateDuration={onUpdateDuration}
-            />
-          </div>
-          <div className="flex-1 w-0">
-            <BedBay 
-              beds={row.right}
-              presets={presets}
-              onOpenSelector={onOpenSelector}
-              onEdit={onEdit}
-              onNext={onNext}
-              onJumpToStep={onJumpToStep}
-              onClear={onClear}
-              side="right"
-              isEmpty={row.right.length === 0}
-              onToggleInjection={onToggleInjection}
-              onToggleTraction={onToggleTraction}
-              onToggleESWT={onToggleESWT}
-              onToggleManual={onToggleManual}
-              onUpdateSteps={onUpdateSteps}
-              onUpdateMemo={onUpdateMemo}
-              onUpdateDuration={onUpdateDuration}
-            />
-          </div>
+    <div className="flex flex-col gap-4 pb-32 landscape:hidden max-w-4xl mx-auto px-0.5 sm:px-1.5">
+      {groupedPairs.map((group, groupIdx) => (
+        <div key={`group-${groupIdx}`} className="flex flex-col gap-1.5 sm:gap-2">
+          {group.map((pair, idx) => (
+            <div key={`${groupIdx}-${idx}`} className="grid grid-cols-2 gap-3 sm:gap-5 md:gap-6">
+              <div className="flex flex-col">
+                <BedBay 
+                  {...props}
+                  side="left"
+                  beds={[getBed(pair.left)]}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                {pair.right !== null ? (
+                  <BedBay 
+                    {...props}
+                    side="right"
+                    beds={[getBed(pair.right)]}
+                  />
+                ) : (
+                  <div className="h-full flex flex-col gap-2 p-4 rounded-2xl border-2 border-dashed border-gray-200/50 dark:border-slate-800/50 bg-transparent opacity-20 select-none items-center justify-center">
+                    <span className="text-gray-400 dark:text-slate-700 text-[10px] font-black uppercase tracking-widest">
+                      RESERVED
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       ))}
     </div>

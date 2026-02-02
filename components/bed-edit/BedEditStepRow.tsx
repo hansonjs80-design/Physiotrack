@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowUp, ArrowDown, X, Minus, Plus, Clock, RefreshCw } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, Minus, Plus, Clock, RefreshCw } from 'lucide-react';
 import { TreatmentStep } from '../../types';
 
 interface BedEditStepRowProps {
@@ -11,7 +12,7 @@ interface BedEditStepRowProps {
   onRemove: (idx: number) => void;
   onChange: (idx: number, updates: Partial<TreatmentStep>) => void;
   onDurationChange: (idx: number, changeMinutes: number) => void;
-  onApplyDuration?: (duration: number) => void; // Only passed if active
+  onApplyDuration?: (duration: number) => void;
 }
 
 export const BedEditStepRow: React.FC<BedEditStepRowProps> = ({
@@ -27,7 +28,6 @@ export const BedEditStepRow: React.FC<BedEditStepRowProps> = ({
 }) => {
   const minutes = Math.floor(step.duration / 60);
 
-  // Handle manual input for minutes
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
     if (!isNaN(val) && val > 0) {
@@ -37,77 +37,126 @@ export const BedEditStepRow: React.FC<BedEditStepRowProps> = ({
   };
 
   return (
-    <div className={`flex flex-col gap-2 p-2 rounded-lg shadow-sm border transition-colors ${isActive ? 'bg-brand-50 border-brand-200 ring-1 ring-brand-200 dark:bg-brand-900/20 dark:border-brand-700' : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700'}`}>
-      {/* Row 1: Name & Order Controls */}
-      <div className="flex items-center gap-2">
-        <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0 ${isActive ? 'bg-brand-100 text-brand-600 dark:bg-brand-800 dark:text-brand-300' : 'bg-gray-100 text-gray-500 dark:bg-slate-700'}`}>
+    <div className={`group flex flex-col gap-2 p-2 sm:p-3 rounded-xl border transition-all ${
+      isActive 
+        ? 'bg-blue-50/70 border-blue-200 shadow-sm dark:bg-blue-900/30 dark:border-blue-800' 
+        : 'bg-white border-gray-100 hover:border-gray-200 dark:bg-slate-800 dark:border-slate-700'
+    }`}>
+      <div className="flex items-center gap-2.5">
+        <div className="flex flex-col -space-y-0.5 shrink-0">
+           <button 
+             onClick={() => onMove(index, 'up')} 
+             disabled={index === 0} 
+             className="text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 disabled:opacity-20 transition-colors"
+           >
+             <ChevronUp className="w-4 h-4" strokeWidth={3} />
+           </button>
+           <button 
+             onClick={() => onMove(index, 'down')} 
+             disabled={index === totalSteps - 1} 
+             className="text-gray-300 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 disabled:opacity-20 transition-colors"
+           >
+             <ChevronDown className="w-4 h-4" strokeWidth={3} />
+           </button>
+        </div>
+
+        <div className={`flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-black shrink-0 shadow-sm ${
+          isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-400'
+        }`}>
            {index + 1}
         </div>
         
-        <input 
-          type="text" 
-          value={step.name}
-          onChange={(e) => onChange(index, { name: e.target.value })}
-          className={`flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-brand-500 outline-none text-sm font-bold truncate ${isActive ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-200'}`}
-        />
-
-        <div className="flex items-center gap-1">
-           <div className="flex flex-col">
-            <button onClick={() => onMove(index, 'up')} disabled={index === 0} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30 rounded text-gray-400 active:scale-90 transition-transform"><ArrowUp className="w-3 h-3" /></button>
-            <button onClick={() => onMove(index, 'down')} disabled={index === totalSteps - 1} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30 rounded text-gray-400 active:scale-90 transition-transform"><ArrowDown className="w-3 h-3" /></button>
-           </div>
-           <button onClick={() => onRemove(index)} className="w-7 h-7 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full active:scale-90 transition-transform"><X className="w-4 h-4" /></button>
+        <div className="flex-1 min-w-0">
+          <input 
+            type="text" 
+            value={step.name}
+            onChange={(e) => onChange(index, { name: e.target.value })}
+            className={`w-full bg-transparent border-none p-0 text-sm font-bold focus:ring-0 outline-none truncate ${
+              isActive ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'
+            }`}
+          />
         </div>
+
+        {/* 시간 설정 UI (우측 -/+ 버튼 배치) */}
+        <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-slate-900/40 rounded-lg p-1 border border-gray-100 dark:border-slate-700 shrink-0">
+           <div className="flex items-center pl-1.5">
+             <input 
+               type="number" 
+               value={minutes} 
+               onChange={handleMinuteInput}
+               className="w-7 text-right bg-transparent text-sm font-black text-gray-800 dark:text-gray-100 outline-none p-0 border-none focus:ring-0"
+             />
+             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 ml-0.5">분</span>
+           </div>
+           
+           <div className="flex items-center gap-1 ml-0.5">
+             <button 
+               onClick={() => onDurationChange(index, -1)} 
+               className="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 rounded-md text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-slate-600 active:scale-90 transition-all"
+             >
+               <Minus className="w-3.5 h-3.5" strokeWidth={3} />
+             </button>
+             <button 
+               onClick={() => onDurationChange(index, 1)} 
+               className="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 rounded-md text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-slate-600 active:scale-90 transition-all"
+             >
+               <Plus className="w-3.5 h-3.5" strokeWidth={3} />
+             </button>
+           </div>
+        </div>
+
+        <button 
+          onClick={() => onRemove(index)} 
+          className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Row 2: Duration, Timer, Color */}
-      <div className="flex items-center gap-2 pl-8">
-         <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-0.5">
-           <button onClick={() => onDurationChange(index, -1)} className="p-1 hover:bg-white dark:hover:bg-slate-600 rounded text-gray-600 dark:text-gray-300"><Minus className="w-3 h-3" /></button>
-           <input 
-             type="number" 
-             value={minutes} 
-             onChange={handleMinuteInput}
-             className="w-8 text-center bg-transparent text-xs font-bold text-gray-700 dark:text-gray-200 outline-none appearance-none"
-           />
-           <button onClick={() => onDurationChange(index, 1)} className="p-1 hover:bg-white dark:hover:bg-slate-600 rounded text-gray-600 dark:text-gray-300"><Plus className="w-3 h-3" /></button>
+      <div className="flex items-center justify-between pl-[44px] pr-1">
+         <div className="flex items-center gap-2">
+            {isActive && onApplyDuration && step.enableTimer && (
+              <button 
+                onClick={() => onApplyDuration(step.duration)}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white rounded-md text-[10px] font-bold shadow-md hover:bg-blue-700 active:scale-95 transition-all animate-pulse"
+              >
+                <RefreshCw className="w-3 h-3" />
+                적용
+              </button>
+            )}
+            
+            <button
+                onClick={() => onChange(index, { enableTimer: !step.enableTimer })}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all border ${
+                  step.enableTimer 
+                    ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800' 
+                    : 'bg-transparent border-transparent text-gray-400 hover:bg-gray-100'
+                }`}
+            >
+                <Clock className="w-3 h-3" />
+                {step.enableTimer ? '타이머 ON' : '타이머 OFF'}
+            </button>
          </div>
 
-         {/* APPLY BUTTON (Visible only if active and timer is enabled) */}
-         {isActive && onApplyDuration && step.enableTimer && (
-            <button 
-              onClick={() => onApplyDuration(step.duration)}
-              className="flex items-center gap-1 px-2 py-1 bg-brand-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-brand-700 active:scale-95 transition-all"
-              title="현재 타이머에 시간 적용"
-            >
-              <RefreshCw className="w-3 h-3" />
-              적용
-            </button>
-         )}
-
-         <button
-            onClick={() => onChange(index, { enableTimer: !step.enableTimer })}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition-colors ${step.enableTimer ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300' : 'bg-gray-100 text-gray-400 dark:bg-slate-700'}`}
-         >
-            <Clock className="w-3 h-3" />
-            {step.enableTimer ? 'ON' : 'OFF'}
-         </button>
-
-         <select
-            value={step.color}
-            onChange={(e) => onChange(index, { color: e.target.value })}
-            className="text-xs p-1 rounded border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-white outline-none w-16"
-         >
-            <option value="bg-red-500">Red</option>
-            <option value="bg-blue-500">Blue</option>
-            <option value="bg-purple-500">Prp</option>
-            <option value="bg-green-500">Grn</option>
-            <option value="bg-orange-500">Org</option>
-            <option value="bg-pink-500">Pnk</option>
-            <option value="bg-cyan-500">Cyn</option>
-            <option value="bg-yellow-500">Yel</option>
-            <option value="bg-gray-500">Gry</option>
-         </select>
+         <div className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer relative">
+             <div className={`w-3 h-3 rounded-full shadow-sm ring-1 ring-black/5 ${step.color}`} />
+             <select
+               value={step.color}
+               onChange={(e) => onChange(index, { color: e.target.value })}
+               className="text-[10px] bg-transparent font-bold text-gray-500 dark:text-gray-400 outline-none cursor-pointer appearance-none pr-3"
+             >
+               <option value="bg-red-500">빨강</option>
+               <option value="bg-blue-500">파랑</option>
+               <option value="bg-purple-500">보라</option>
+               <option value="bg-green-500">초록</option>
+               <option value="bg-orange-500">주황</option>
+               <option value="bg-pink-500">분홍</option>
+               <option value="bg-cyan-500">청록</option>
+               <option value="bg-yellow-500">노랑</option>
+               <option value="bg-gray-500">회색</option>
+             </select>
+             <ChevronDown className="w-2.5 h-2.5 text-gray-300 absolute right-0.5 pointer-events-none" />
+         </div>
       </div>
     </div>
   );

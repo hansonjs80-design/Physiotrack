@@ -4,77 +4,24 @@ import { calculateRemainingTime } from '../utils/bedLogic';
 import { playAlarmPattern } from '../utils/alarm';
 import { getAbbreviation } from '../utils/bedUtils';
 
-// Web Worker logic embedded as a string to avoid file path/bundling issues
-const WORKER_CODE = `
-const state = {
-  beds: new Map(),
-};
-
-self.onmessage = (e) => {
-  if (e.data.type === 'UPDATE_BEDS') {
-    const currentIds = new Set();
-
-    e.data.beds.forEach((bed) => {
-      if (bed.isEnabled && bed.startTime) {
-        currentIds.add(bed.id);
-        const targetTime = bed.startTime + (bed.duration * 1000);
-        
-        // Update logic
-        let existing = state.beds.get(bed.id);
-        if (!existing || existing.targetTime !== targetTime) {
-          state.beds.set(bed.id, { 
-            targetTime, 
-            alerted: false 
-          });
-        }
-      }
-    });
-
-    // Cleanup
-    for (const id of state.beds.keys()) {
-      if (!currentIds.has(id)) {
-        state.beds.delete(id);
-      }
-    }
-  }
-};
-
-setInterval(() => {
-  const now = Date.now();
-  
-  state.beds.forEach((info, id) => {
-    const remainingMs = info.targetTime - now;
-    
-    if (remainingMs <= 0 && !info.alerted) {
-      info.alerted = true;
-      self.postMessage({ type: 'ALARM', bedId: id });
-    }
-  });
-
-  self.postMessage({ type: 'TICK' });
-
-}, 1000);
-`;
-
 export const useBedTimer = (
   setBeds: React.Dispatch<React.SetStateAction<BedState[]>>,
   presets: Preset[],
   isSoundEnabled: boolean,
-  beds: BedState[]
+  beds: BedState[] // Current beds state needed for sync
 ) => {
   const workerRef = useRef<Worker | null>(null);
 
+  // 1. Initialize Web Worker
   useEffect(() => {
-    // Create worker from Blob
-    const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
-    const workerUrl = URL.createObjectURL(blob);
-    
-    workerRef.current = new Worker(workerUrl);
+    // Vite worker import syntax
+    workerRef.current = new Worker(new URL('../workers/timerWorker.ts', import.meta.url), { type: 'module' });
 
     workerRef.current.onmessage = (e) => {
       const { type, bedId } = e.data;
 
       if (type === 'TICK') {
+        // Update UI every tick based on real-time calculation
         setBeds((currentBeds) => {
           return currentBeds.map((bed) => {
             const newRemaining = calculateRemainingTime(bed, presets);
@@ -85,14 +32,18 @@ export const useBedTimer = (
           });
         });
       } else if (type === 'ALARM' && bedId) {
+        // Trigger Alarm
         setBeds((currentBeds) => {
             const bed = currentBeds.find(b => b.id === bedId);
             if (!bed) return currentBeds;
 
+            // Find current step info for notification
             const preset = bed.customPreset || presets.find(p => p.id === bed.currentPresetId);
             const currentStep = preset?.steps[bed.currentStepIndex];
             const stepName = currentStep ? getAbbreviation(currentStep.name) : '';
             
+            // Trigger Sound/Vibration/Notification
+            // isSoundEnabled가 true면 소리 재생, false면 무음 알림
             playAlarmPattern(bed.id, stepName, !isSoundEnabled);
 
             return currentBeds;
@@ -102,10 +53,10 @@ export const useBedTimer = (
 
     return () => {
       workerRef.current?.terminate();
-      URL.revokeObjectURL(workerUrl);
     };
-  }, []);
+  }, []); // Run once on mount
 
+  // 2. Sync Bed State to Worker
   useEffect(() => {
     if (!workerRef.current) return;
 
@@ -128,5 +79,5 @@ export const useBedTimer = (
       beds: activeBeds
     });
 
-  }, [beds, presets]);
+  }, [beds, presets]); // Re-sync when bed state or presets change
 };

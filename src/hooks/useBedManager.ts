@@ -49,12 +49,12 @@ export const useBedManager = (presets: Preset[], isSoundEnabled: boolean) => {
     bedsRef.current = beds;
   }, [beds]);
 
-  // Web Worker 동기화를 위해 beds 상태를 전달
+  // Pass 'beds' to useBedTimer so it can sync with the Web Worker
   useBedTimer(setBeds, presets, isSoundEnabled, beds);
   
   const { realtimeStatus } = useBedRealtime(setBeds, setLocalBeds);
 
-  // 활성화된 배드가 하나라도 있으면 화면 꺼짐 방지 (Wake Lock)
+  // Activate Wake Lock if any bed is ACTIVE to prevent screen sleep
   const hasActiveBeds = beds.some(b => b.status === BedStatus.ACTIVE && !b.isPaused);
   useWakeLock(hasActiveBeds);
 

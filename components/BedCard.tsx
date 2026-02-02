@@ -114,7 +114,6 @@ export const BedCard: React.FC<BedCardProps> = memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // 타이머나 침상 상태가 바뀔 때만 리렌더링
   return (
     prevProps.bed.remainingTime === nextProps.bed.remainingTime &&
     prevProps.bed.status === nextProps.bed.status &&

@@ -45,26 +45,24 @@ export const BedContent: React.FC<BedContentProps> = ({
         return (
           <div 
             key={step.id || idx}
-            className="flex-1 flex flex-col h-full min-w-0 pb-7 landscape:pb-6 sm:landscape:pb-6 lg:landscape:pb-12 group/col"
+            className="flex-1 flex flex-col h-full min-w-0 pb-6 sm:pb-8 landscape:pb-5 lg:landscape:pb-10 group/col relative"
             onDoubleClick={(e) => {
-              // CRITICAL: Stop propagation so the BedCard's onEdit (Settings Overlay) doesn't trigger.
-              // This prioritizes the "Jump to Step" / "Reorder" feature.
               e.stopPropagation();
               onJumpToStep && onJumpToStep(bed.id, idx);
             }}
           >
             {/* Top Half: Step Indicator */}
             <div 
-              className={`flex-1 flex flex-col items-center justify-center p-1 relative overflow-hidden transition-all cursor-pointer ${colorClass} mt-1 sm:mt-0 landscape:mt-1 sm:landscape:mt-1 lg:landscape:mt-2 sm:landscape:mb-0 sm:landscape:rounded-t-sm`}
+              className={`flex-1 flex flex-col items-center justify-center p-0.5 relative overflow-hidden transition-all cursor-pointer ${colorClass}`}
             >
-                <span className={`font-black text-xs sm:text-2xl landscape:text-xs sm:landscape:text-xs lg:landscape:text-2xl text-center leading-tight break-all px-0.5 ${isActive ? 'scale-110' : 'opacity-80'}`}>
+                <span className={`font-black text-[10px] xs:text-xs sm:text-2xl landscape:text-[10px] sm:landscape:text-xs lg:landscape:text-xl text-center leading-tight break-all px-0.5 ${isActive ? 'scale-110' : 'opacity-80'}`}>
                   {getAbbreviation(step.name)}
                 </span>
                 
                 {isActive && <div className="absolute bottom-0 w-full h-1 bg-white/50 animate-pulse" />}
 
                 {isInQueue && !isCompleted && (
-                  <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 sm:w-7 sm:h-7 landscape:w-3 landscape:h-3 sm:landscape:w-3 sm:landscape:h-3 lg:landscape:w-6 lg:landscape:h-6 bg-brand-600 text-white rounded-full flex items-center justify-center text-[9px] sm:text-base landscape:text-[8px] sm:landscape:text-[8px] lg:landscape:text-sm font-black shadow-md z-10 border border-white/20">
+                  <div className="absolute top-0.5 right-0.5 w-3 h-3 sm:w-6 sm:h-6 bg-brand-600 text-white rounded-full flex items-center justify-center text-[8px] sm:text-sm font-black shadow-md z-10 border border-white/20">
                     {queueIndex + 1}
                   </div>
                 )}
@@ -72,21 +70,16 @@ export const BedContent: React.FC<BedContentProps> = ({
 
             {/* Bottom Half: Memo Field */}
             <div 
-              className="h-8 sm:h-7 landscape:h-6 sm:landscape:h-6 lg:landscape:h-16 shrink-0 bg-gray-50 dark:bg-slate-800/80 border-t border-gray-200 dark:border-slate-700 flex items-center justify-center px-0.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group touch-manipulation select-none overflow-hidden sm:landscape:rounded-b-sm"
+              className="absolute bottom-0 w-full h-6 sm:h-8 landscape:h-5 sm:landscape:h-6 lg:landscape:h-10 shrink-0 bg-gray-50 dark:bg-slate-800/90 border-t border-gray-200 dark:border-slate-700 flex items-center justify-center px-0.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group touch-manipulation select-none overflow-hidden"
               onClick={(e) => handleMemoClick(e, idx, step.name, memo)}
-              onDoubleClick={(e) => {
-                // Prevent bubbling to column which triggers Jump, AND preventing bubbling to Card which triggers Edit.
-                // Memo area should just be for Memo.
-                e.stopPropagation();
-              }}
-              title="클릭하여 메모 수정"
+              onDoubleClick={(e) => e.stopPropagation()}
             >
                {memo ? (
-                 <span className="text-[8px] sm:text-xs landscape:text-[8px] sm:landscape:text-[8px] lg:landscape:text-sm leading-none text-center font-bold text-gray-800 dark:text-gray-200 break-words line-clamp-2 w-full pointer-events-none">
+                 <span className="text-[9px] sm:text-xs landscape:text-[8px] lg:landscape:text-sm leading-none text-center font-bold text-gray-800 dark:text-gray-200 break-words line-clamp-2 w-full pointer-events-none px-0.5">
                    {memo}
                  </span>
                ) : (
-                 <span className="text-[8px] sm:text-sm text-gray-400 dark:text-slate-500 font-bold opacity-60 group-hover:opacity-100 transition-opacity select-none pointer-events-none italic">
+                 <span className="text-[10px] sm:text-sm text-gray-300 dark:text-slate-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity select-none pointer-events-none">
                    +
                  </span>
                )}

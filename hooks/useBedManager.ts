@@ -47,7 +47,6 @@ export const useBedManager = (presets: Preset[]) => {
     if (!isOnlineMode()) setBeds(localBeds);
   }, [localBeds]);
 
-  // 통합 상태 업데이트 함수 (DB 동기화 포함)
   const updateBedState = useCallback(async (bedId: number, updates: Partial<BedState>) => {
     const timestamp = Date.now();
     const updateWithTimestamp = { ...updates, lastUpdateTimestamp: timestamp };
@@ -88,7 +87,6 @@ export const useBedManager = (presets: Preset[]) => {
     });
   }, [presets, updateBedState]);
 
-  // 커스텀 단계들로 치료 시작
   const startCustomPreset = useCallback((bedId: number, name: string, steps: TreatmentStep[], options?: SelectPresetOptions) => {
     if (steps.length === 0) return;
     const firstStep = steps[0];
@@ -117,7 +115,6 @@ export const useBedManager = (presets: Preset[]) => {
     });
   }, [updateBedState]);
 
-  // 단일 치료 즉시 시작 기능
   const startQuickTreatment = useCallback((bedId: number, template: typeof STANDARD_TREATMENTS[0], options?: SelectPresetOptions) => {
     const step: TreatmentStep = {
       id: crypto.randomUUID(),
@@ -158,14 +155,12 @@ export const useBedManager = (presets: Preset[]) => {
     if (!bed || bed.status !== BedStatus.ACTIVE) return;
 
     if (!bed.isPaused) {
-      // 일시정지: 현재 남은 시간을 계산하여 상태에 고정
       const currentRemaining = calculateRemainingTime(bed, presets);
       updateBedState(bedId, { 
         isPaused: true, 
         remainingTime: currentRemaining 
       });
     } else {
-      // 재개: 현재 시각을 새로운 시작 시각으로 설정하고 남은 시간을 기준 지속시간으로 설정
       updateBedState(bedId, { 
         isPaused: false, 
         startTime: Date.now(),
@@ -182,7 +177,7 @@ export const useBedManager = (presets: Preset[]) => {
       currentStepIndex: 0,
       queue: [],
       startTime: null,
-      originalDuration: undefined, // Fix: Changed null to undefined
+      originalDuration: undefined,
       remainingTime: 0,
       isPaused: false,
       isInjection: false,

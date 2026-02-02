@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { usePresetManager } from './hooks/usePresetManager';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -47,22 +46,23 @@ const App: React.FC = () => {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  const handleSelectPreset = (bedId: number, presetId: string, options: { isInjection: boolean, isTraction: boolean, isESWT: boolean, isManual: boolean }) => {
+  // Handler wrappers to keep JSX clean
+  const handleSelectPreset = (bedId: number, presetId: string, options: any) => {
     selectPreset(bedId, presetId, options);
     setSelectingBedId(null);
   };
 
-  const handleCustomStart = (bedId: number, name: string, steps: TreatmentStep[], options: { isInjection: boolean, isTraction: boolean, isESWT: boolean, isManual: boolean }) => {
+  const handleCustomStart = (bedId: number, name: string, steps: TreatmentStep[], options: any) => {
     startCustomPreset(bedId, name, steps, options);
     setSelectingBedId(null);
   };
 
-  const handleQuickStart = (bedId: number, template: typeof STANDARD_TREATMENTS[0], options: { isInjection: boolean, isTraction: boolean, isESWT: boolean, isManual: boolean }) => {
+  const handleQuickStart = (bedId: number, template: typeof STANDARD_TREATMENTS[0], options: any) => {
     startQuickTreatment(bedId, template, options);
     setSelectingBedId(null);
   };
   
-  const handleStartTraction = (bedId: number, duration: number, options: { isInjection: boolean, isTraction: boolean, isESWT: boolean, isManual: boolean }) => {
+  const handleStartTraction = (bedId: number, duration: number, options: any) => {
     startTraction(bedId, duration, options);
     setSelectingBedId(null);
   };
@@ -72,12 +72,12 @@ const App: React.FC = () => {
   const editingBedSteps = editingBed ? (editingBed.customPreset?.steps || presets.find(p => p.id === editingBed.currentPresetId)?.steps || []) : [];
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-100 dark:bg-slate-950">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gray-100 dark:bg-slate-950">
       {/* Dynamic Header Wrapper */}
       <div 
         className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
           isHeaderVisible 
-            ? 'h-10 opacity-100 translate-y-0' 
+            ? 'h-14 opacity-100 translate-y-0' 
             : 'h-0 opacity-0 -translate-y-full pointer-events-none'
         }`}
       >
@@ -90,7 +90,7 @@ const App: React.FC = () => {
 
       <main 
         ref={mainRef}
-        className="flex-1 overflow-x-auto overflow-y-auto px-1 py-2 sm:p-4 scroll-smooth touch-pan-x touch-pan-y bg-gray-200 dark:bg-slate-950"
+        className="flex-1 overflow-x-auto overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 md:p-4 scroll-smooth touch-pan-x touch-pan-y bg-gray-200 dark:bg-slate-950"
       >
         <BedLayoutContainer 
           beds={beds}

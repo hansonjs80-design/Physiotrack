@@ -53,6 +53,34 @@
       .dark .custom-scrollbar {
         scrollbar-color: #334155 transparent;
       }
+
+      /* Mobile Landscape Optimization: Visible Scrollbars */
+      @media (orientation: landscape) and (max-width: 1024px) {
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+          display: block;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(100, 116, 139, 0.5); /* Slate-500 semi-transparent */
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dark ::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.4); /* Slate-400 semi-transparent */
+        }
+        
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+        }
+        .dark .custom-scrollbar {
+          scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+        }
+      }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

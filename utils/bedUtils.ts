@@ -68,7 +68,8 @@ export const getBedCardStyles = (bed: BedState, isOvertime: boolean): string => 
   // 기본 테두리를 검정색(border-black)으로 설정하고 두께를 border-[1.5px]로 조정
   let base = "relative flex flex-col h-full rounded-lg shadow-md border-[1.5px] border-black dark:border-slate-200 overflow-hidden select-none transition-all duration-300 ";
   
-  const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[118px] sm:landscape:min-h-[118px] lg:landscape:min-h-[216px] ";
+  // landscape:min-h-[118px] -> [130px] (+10%)
+  const heightClasses = "min-h-[144px] sm:min-h-[200px] landscape:min-h-[130px] sm:landscape:min-h-[130px] lg:landscape:min-h-[216px] ";
 
   const isBedT = bed.id === 11;
 

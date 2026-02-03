@@ -21,17 +21,18 @@ export const MainLayout: React.FC = () => {
   }, [isDarkMode]);
 
   return (
-    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-gray-100 dark:bg-slate-950 relative">
+    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-gray-100 dark:bg-slate-950 landscape:bg-transparent relative">
       {/* 
-        Header Wrapper Layout Logic (Stable Version):
-        - Mobile (< 768px): Absolute (Scroll-away to save space)
-        - Tablet/Desktop (>= 768px): Relative (Sticky/Fixed flow to prevent overlap)
+        Header Wrapper
+        - Mobile: Absolute (Scroll-away)
+        - Desktop (md+): Relative (Sticky/Fixed flow)
       */}
       <div 
         ref={headerRef}
         className="
           w-full z-40 will-change-transform
           h-[calc(3.5rem+env(safe-area-inset-top))]
+          landscape:h-[calc(2.5rem+env(safe-area-inset-top))]
           absolute top-0 left-0 right-0
           md:relative md:top-auto md:left-auto md:right-auto md:shrink-0
         "
@@ -43,19 +44,42 @@ export const MainLayout: React.FC = () => {
         />
       </div>
 
+      {/* 
+        Main Content Area 
+        - Refactored padding logic to prevent 'gray bars' in landscape 
+        - landscape:px-0 ensures edge-to-edge content on mobile landscape
+      */}
       <main 
         ref={mainRef}
         className="
           flex-1 overflow-x-auto overflow-y-auto scroll-smooth touch-pan-x touch-pan-y overscroll-contain 
-          bg-gray-200 dark:bg-slate-950
-          px-0 sm:px-2 md:p-4
+          bg-gray-200 dark:bg-slate-950 landscape:bg-transparent
+          
+          /* Base Padding (Mobile Portrait) */
+          px-0 
+          pt-[calc(3.5rem+env(safe-area-inset-top)+1rem)] 
           pb-[calc(env(safe-area-inset-bottom)+1.5rem)]
           
-          /* Mobile Padding: Compensate for absolute header + extra spacing */
-          pt-[calc(3.5rem+env(safe-area-inset-top)+1rem)] 
+          /* Tablet/Large Phone Portrait */
+          sm:px-2 
           
-          /* Tablet/Desktop Padding: Reset top padding as header is relative */
+          /* Desktop/Tablet Defaults (md+) */
+          md:p-4 
           md:pt-2 
+          
+          /* Mobile Landscape Overrides */
+          landscape:px-0 
+          landscape:pt-[calc(2.5rem+env(safe-area-inset-top))]
+          landscape:pb-[env(safe-area-inset-bottom)]
+          
+          /* 
+            Critical Fix: MD+ Landscape (e.g. iPhone Max, Tablets) 
+            - Reset horizontal padding to 0 to remove gray bars
+            - Reset top padding to 2 (0.5rem) since header is relative here
+          */
+          md:landscape:px-0
+          md:landscape:pt-2
+          md:landscape:pb-[env(safe-area-inset-bottom)]
         "
       >
         <BedLayoutContainer beds={beds} presets={presets} />
